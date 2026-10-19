@@ -21,9 +21,9 @@ export class SawWaveSystem {
     }
     await this.context.resume();
   }
-  async noteOn(key,frequency){
+  async noteOn(key,frequency,note=null){
     if(this.voices.has(key))return;
-    const voice={pending:true,released:false};
+    const voice={pending:true,released:false,baseFrequency:frequency, note};
     this.voices.set(key,voice);
     try{
       await this.ensureContext();
@@ -31,7 +31,7 @@ export class SawWaveSystem {
       const now=this.context.currentTime;
       const oscillator=this.context.createOscillator(),gain=this.context.createGain();
       oscillator.type="sawtooth";
-      oscillator.frequency.setValueAtTime(Math.max(20,Math.min(frequency,this.context.sampleRate/2-1)),now);
+      oscillator.frequency.setValueAtTime(Math.max(20,Math.min(voice.baseFrequency,this.context.sampleRate/2-1)),now);
       gain.gain.setValueAtTime(0,now);
       // Limit polyphonic amplitude to reduce clipping.
       gain.gain.linearRampToValueAtTime(this.outputGain*.22,now+.012);
@@ -40,6 +40,16 @@ export class SawWaveSystem {
       voice.oscillator=oscillator;voice.gain=gain;voice.pending=false;
       oscillator.start(now);
     }catch(error){this.voices.delete(key);throw error;}
+  }
+  retuneNotes(referenceHz){
+    for(const voice of this.voices.values()){
+      if(voice.note===null)continue;
+      voice.baseFrequency=440*Math.pow(2,(voice.note-69)/12)*referenceHz/440;
+      if(voice.oscillator && this.context){
+        const limit=this.context.sampleRate/2-1;
+        voice.oscillator.frequency.setTargetAtTime(Math.max(20,Math.min(limit,voice.baseFrequency)),this.context.currentTime,.008);
+      }
+    }
   }
   noteOff(key){
     const voice=this.voices.get(key);
