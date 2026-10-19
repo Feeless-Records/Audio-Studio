@@ -1,43 +1,30 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Audio Studio | Hello World</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Audio Studio | Vector Text Lab</title>
   <style>
-    body {
-      min-height: 100vh;
-      margin: 0;
-      display: grid;
-      place-items: center;
-      overflow: hidden;
-      background: #10121a;
-      color: #f7f7fb;
-      font-family: system-ui, sans-serif;
-      text-align: center;
-    }
-    h1 { font-size: clamp(2rem, 6vw, 4rem); margin-bottom: 0.5rem; }
-    p { color: #aeb5c6; }
-    .flying-text {
-      position: fixed;
-      top: 20%;
-      left: 0;
-      z-index: 2;
-      white-space: nowrap;
-      font-size: clamp(1.4rem, 4vw, 3rem);
-      font-weight: 900;
-      color: #ffca54;
-      text-shadow: 0 0 12px #f97316, 0 0 25px #ea580c;
-      pointer-events: none;
-      will-change: transform;
-    }
-    @media (prefers-reduced-motion: reduce) {
-      .flying-text { left: 50%; transform: translateX(-50%); }
-    }
+    * { box-sizing: border-box; }
+    body { margin: 0; min-height: 100vh; overflow: hidden; background: #10121a; color: white; font-family: system-ui, sans-serif; }
+    #stage { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+    main { position: relative; display: grid; place-items: center; min-height: 100vh; text-align: center; pointer-events: none; }
+    h1 { font-size: clamp(2rem, 6vw, 4rem); margin: 0; }
+    .subtitle { color: #aeb5c6; }
+    .panel { position: fixed; z-index: 2; left: 16px; bottom: 16px; right: 16px; max-width: 550px; background: #1d2333e8; border: 1px solid #4c5365; border-radius: 12px; padding: 14px; }
+    label { display: block; margin-bottom: 8px; font-size: 13px; color: #cbd5e1; }
+    input { width: 100%; padding: 10px 12px; color: white; background: #111827; border: 1px solid #64748b; border-radius: 6px; font-size: 16px; }
+    #status { font-size: 12px; color: #aeb5c6; margin: 8px 0 0; }
   </style>
   <script src="app.js" defer></script>
 </head>
 <body>
+  <canvas id="stage" aria-label="Animated vector typography"></canvas>
   <main id="app"></main>
+  <section class="panel">
+    <label for="terminal">Terminal / text output → vector glyphs → GPU</label>
+    <input id="terminal" value="Saatana! Perkele!" maxlength="80" spellcheck="false" aria-label="Animated text">
+    <p id="status" role="status">Initializing renderer…</p>
+  </section>
 </body>
 </html>
