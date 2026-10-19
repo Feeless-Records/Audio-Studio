@@ -9,13 +9,15 @@ import {FFTAnalyzer} from "./systems/fft-analyzer.js";
 import {StudioCore} from "./systems/studio-core.js";
 import {KeyboardSystem} from "./systems/keyboard.js";
 import {ChordSystem} from "./systems/chord.js";
+import {MasterVolumeSystem,MasterVolumeKnob} from "./systems/master-volume.js";
 class AudioStudioApp {
   constructor(){
     this.browser=new BrowserApp();
     this.core=new StudioCore({bpm:120});
     this.theme=new ThemeSystem();
-    this.audio=new AudioSystem();
-    this.saw=new SawWaveSystem();
+    this.master=new MasterVolumeSystem(100);
+    this.audio=new AudioSystem("./Perkele!.wav",this.master);
+    this.saw=new SawWaveSystem(this.master);
     this.chords=new ChordSystem();
     this.keyboard=new KeyboardSystem(this.saw,{onError:error=>{this.status.textContent="Keyboard audio error: "+error.message;},onNotesChanged:notes=>this.updateChord(notes)});
     this.layout=new LayoutSystem(document.querySelector("#app"));
@@ -29,6 +31,7 @@ class AudioStudioApp {
     this.browser.start();
     this.theme.apply("dark");
     const controls=this.layout.renderWelcome("FEELESS DAW","Welcome to Feeless Records Audio Studio.");
+    this.masterKnob=new MasterVolumeKnob(controls.masterKnob,controls.masterValue,this.master).start();
     this.startButton=controls.startButton;
     this.sawButton=controls.sawButton;
     this.frequencySlider=controls.frequencySlider;
@@ -137,6 +140,6 @@ class AudioStudioApp {
     }
   }
   resume(){this.browser.start();this.keyboard.start();this.animation.start();this.fft?.start();}
-  stop(){this.audio.stop();this.browser.stop();this.keyboard.stop();this.releaseSaw();this.animation.stop();this.fft?.stop();}
+  stop(){this.masterKnob?.stop();this.audio.stop();this.browser.stop();this.keyboard.stop();this.releaseSaw();this.animation.stop();this.fft?.stop();}
 }
 new AudioStudioApp().start();
