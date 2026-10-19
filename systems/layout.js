@@ -24,12 +24,15 @@ export class LayoutSystem {
     chordField.id="chordDisplay";chordField.setAttribute("role","status");
     chordField.setAttribute("aria-live","off");
     chordField.textContent="Аккорд: — | Нет нажатых нот";
+    const quintButton=document.createElement("button");
+    quintButton.type="button";quintButton.id="quintButton";quintButton.textContent="Show quint circle";
+    quintButton.setAttribute("aria-pressed","false");
     const p=document.createElement("p");p.textContent=subtitle;
     const hint=document.createElement("p");
     hint.className="keyboard-hint";
     hint.textContent="Keyboard: Q 2 W 3 E ... [ = ] (C4–G5), Z S X D C ... / (C3–E4). Hold keys to play notes.";
-    group.append(h,button,saw,label,slider,fftCanvas,chordField,hint,p);
+    group.append(h,button,saw,label,slider,fftCanvas,chordField,quintButton,hint,p);
     this.root.replaceChildren(group);
-    return {startButton:button,sawButton:saw,frequencySlider:slider,frequencyValue:value,fftCanvas,chordField};
+    return {startButton:button,sawButton:saw,frequencySlider:slider,frequencyValue:value,fftCanvas,chordField,quintButton};
   }
 }
