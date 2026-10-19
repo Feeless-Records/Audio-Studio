@@ -7,13 +7,15 @@ import {SawWaveSystem} from "./systems/saw-wave.js";
 import {FFTAnalyzer} from "./systems/fft-analyzer.js";
 import {StudioCore} from "./systems/studio-core.js";
 import {KeyboardSystem} from "./systems/keyboard.js";
+import {ChordSystem} from "./systems/chord.js";
 class AudioStudioApp {
   constructor(){
     this.core=new StudioCore({bpm:120});
     this.theme=new ThemeSystem();
     this.audio=new AudioSystem();
     this.saw=new SawWaveSystem();
-    this.keyboard=new KeyboardSystem(this.saw,{onError:error=>{this.status.textContent="Keyboard audio error: "+error.message;}});
+    this.chords=new ChordSystem();
+    this.keyboard=new KeyboardSystem(this.saw,{onError:error=>{this.status.textContent="Keyboard audio error: "+error.message;},onNotesChanged:notes=>this.updateChord(notes)});
     this.layout=new LayoutSystem(document.querySelector("#app"));
     this.animation=new AnimationSystem(document.querySelector(".fly-track"));
     this.text=new TextSystem(document.querySelector("#flying"));
@@ -28,6 +30,8 @@ class AudioStudioApp {
     this.sawButton=controls.sawButton;
     this.frequencySlider=controls.frequencySlider;
     this.frequencyValue=controls.frequencyValue;
+    this.chordField=controls.chordField;
+    this.updateChord([]);
     this.fft=new FFTAnalyzer(controls.fftCanvas,[this.saw,this.audio]);
     this.fft.start();
     this.startButton.addEventListener("click",()=>this.playSound(this.startButton));
@@ -45,6 +49,11 @@ class AudioStudioApp {
       console.error(error);
     }
     window.addEventListener("pagehide",()=>this.stop(),{once:true});
+  }
+  updateChord(notes){
+    if(!this.chordField)return;
+    const result=this.chords.describe(notes);
+    this.chordField.textContent="Аккорд: "+result.chord+" | "+result.notes;
   }
   configureSaw(){
     const button=this.sawButton;
