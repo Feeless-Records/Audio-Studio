@@ -1,236 +1,191 @@
 "use strict";
-
-// Audio Studio vector text experiment:
-// Text input -> stroke glyphs -> triangle geometry -> WebGPU.
-// A small real WebAssembly module, compiled from C to wasm32, controls motion.
-const WASM_BASE64 = "AGFzbQEAAAABCAFgA319fQF9AwIBAAQFAXABAQEFAwYIAX8BQYCIBAsHFQIGbWVtb3J5AgAIcG9zaXRpb24AAApiAWACAX0Bf0MAAAAAIQMCQCABQwAAAABfDQACQAJAIAAgApQgAZUiA4tDAAAAT11FDQAgA6ghBAwBC0GAgICAeCEEC0MAAIA/IAMgBLKTIgOTIAMgBEEBcRsgAZQhAwsgAws=";
-
-const app = document.getElementById("app");
-const h1 = document.createElement("h1");
-h1.textContent = "Hello World!";
-const subtitle = document.createElement("p");
-subtitle.className = "subtitle";
-subtitle.textContent = "Welcome to Feeless Records Audio Studio.";
-app.append(h1, subtitle);
-
 const canvas = document.getElementById("stage");
-const input = document.getElementById("terminal");
+const input = document.getElementById("message");
 const status = document.getElementById("status");
-
-// Single-stroke vector alphabet: each path is a list of points in a 6x8 grid.
-// Every line is tessellated into 2 triangles, not converted to a bitmap texture.
-const glyphs = {
-  A: "0,8 3,0 6,8|1,5 5,5",
-  B: "0,0 0,8 4,8 6,6 4,4 0,4|4,4 6,2 4,0 0,0",
-  C: "6,1 4,0 1,0 0,2 0,6 1,8 4,8 6,7",
-  D: "0,0 0,8 3,8 6,6 6,2 3,0 0,0",
-  E: "6,0 0,0 0,8 6,8|0,4 5,4",
-  F: "0,8 0,0 6,0|0,4 5,4",
-  G: "6,1 4,0 1,0 0,2 0,6 1,8 5,8 6,6 6,4 3,4",
-  H: "0,0 0,8|6,0 6,8|0,4 6,4",
-  I: "0,0 6,0|3,0 3,8|0,8 6,8",
-  J: "0,0 6,0|5,0 5,6 4,8 1,8 0,6",
-  K: "0,0 0,8|6,0 0,4 6,8",
-  L: "0,0 0,8 6,8",
-  M: "0,8 0,0 3,4 6,0 6,8",
-  N: "0,8 0,0 6,8 6,0",
-  O: "1,0 5,0 6,2 6,6 5,8 1,8 0,6 0,2 1,0",
-  P: "0,8 0,0 5,0 6,2 5,4 0,4",
-  Q: "1,0 5,0 6,2 6,6 5,8 1,8 0,6 0,2 1,0|3,5 7,9",
-  R: "0,8 0,0 5,0 6,2 5,4 0,4|3,4 6,8",
-  S: "6,1 4,0 1,0 0,2 1,4 5,4 6,6 5,8 2,8 0,7",
-  T: "0,0 6,0|3,0 3,8",
-  U: "0,0 0,6 1,8 5,8 6,6 6,0",
-  V: "0,0 3,8 6,0",
-  W: "0,0 1,8 3,4 5,8 6,0",
-  X: "0,0 6,8|6,0 0,8",
-  Y: "0,0 3,4 6,0|3,4 3,8",
-  Z: "0,0 6,0 0,8 6,8",
-  "0": "1,0 5,0 6,2 6,6 5,8 1,8 0,6 0,2 1,0|0,8 6,0",
-  "1": "1,2 3,0 3,8|1,8 5,8",
-  "2": "0,2 1,0 5,0 6,2 6,3 0,8 6,8",
-  "3": "0,0 6,0 3,4 6,4 6,7 4,8 0,8",
-  "4": "5,8 5,0 0,5 6,5",
-  "5": "6,0 0,0 0,4 5,4 6,6 5,8 0,8",
-  "6": "6,0 2,0 0,3 0,6 2,8 5,8 6,6 5,4 0,4",
-  "7": "0,0 6,0 2,8",
-  "8": "1,0 5,0 6,2 5,4 1,4 0,2 1,0|1,4 0,6 1,8 5,8 6,6 5,4",
-  "9": "6,4 1,4 0,2 1,0 5,0 6,2 6,6 4,8 0,8",
-  "!": "3,0 3,5|3,7 3,8",
-  "?": "0,2 1,0 5,0 6,2 3,5|3,7 3,8",
-  ".": "3,7 3,8",
-  ",": "3,7 2,9",
-  ":": "3,2 3,3|3,6 3,7",
-  "-": "1,4 5,4",
-  "/": "0,8 6,0",
-  "'": "3,0 2,2",
-  " ": ""
+const encoder = new TextEncoder();
+// Public-domain-style 5×7 bitmap patterns converted into geometric rectangles, not a texture.
+// Each "on" cell becomes two GPU triangles: real vector geometry.
+const GLYPHS = {
+" ":["00000","00000","00000","00000","00000","00000","00000"],
+"!":["00100","00100","00100","00100","00100","00000","00100"],
+"?":["01110","10001","00001","00010","00100","00000","00100"],
+".":["00000","00000","00000","00000","00000","00000","00100"],
+"-":["00000","00000","00000","11111","00000","00000","00000"],
+"A":["01110","10001","10001","11111","10001","10001","10001"],
+"B":["11110","10001","10001","11110","10001","10001","11110"],
+"C":["01111","10000","10000","10000","10000","10000","01111"],
+"D":["11110","10001","10001","10001","10001","10001","11110"],
+"E":["11111","10000","10000","11110","10000","10000","11111"],
+"F":["11111","10000","10000","11110","10000","10000","10000"],
+"G":["01111","10000","10000","10111","10001","10001","01111"],
+"H":["10001","10001","10001","11111","10001","10001","10001"],
+"I":["11111","00100","00100","00100","00100","00100","11111"],
+"J":["00111","00010","00010","00010","10010","10010","01100"],
+"K":["10001","10010","10100","11000","10100","10010","10001"],
+"L":["10000","10000","10000","10000","10000","10000","11111"],
+"M":["10001","11011","10101","10101","10001","10001","10001"],
+"N":["10001","11001","10101","10011","10001","10001","10001"],
+"O":["01110","10001","10001","10001","10001","10001","01110"],
+"P":["11110","10001","10001","11110","10000","10000","10000"],
+"Q":["01110","10001","10001","10001","10101","10010","01101"],
+"R":["11110","10001","10001","11110","10100","10010","10001"],
+"S":["01111","10000","10000","01110","00001","00001","11110"],
+"T":["11111","00100","00100","00100","00100","00100","00100"],
+"U":["10001","10001","10001","10001","10001","10001","01110"],
+"V":["10001","10001","10001","10001","10001","01010","00100"],
+"W":["10001","10001","10001","10101","10101","10101","01010"],
+"X":["10001","10001","01010","00100","01010","10001","10001"],
+"Y":["10001","10001","01010","00100","00100","00100","00100"],
+"Z":["11111","00001","00010","00100","01000","10000","11111"],
+"0":["01110","10011","10101","10101","11001","10001","01110"],
+"1":["00100","01100","00100","00100","00100","00100","01110"],
+"2":["01110","10001","00001","00010","00100","01000","11111"],
+"3":["11110","00001","00001","01110","00001","00001","11110"],
+"4":["00010","00110","01010","10010","11111","00010","00010"],
+"5":["11111","10000","10000","11110","00001","00001","11110"],
+"6":["01110","10000","10000","11110","10001","10001","01110"],
+"7":["11111","00001","00010","00100","01000","01000","01000"],
+"8":["01110","10001","10001","01110","10001","10001","01110"],
+"9":["01110","10001","10001","01111","00001","00001","01110"]
 };
-
-function makeSegments(str) {
-  const lines = [];
-  let pen = 0;
-  for (const char of str.toUpperCase()) {
-    const paths = (glyphs[char] ?? glyphs["?"]).split("|");
-    for (const path of paths) {
-      if (!path) continue;
-      const points = path.split(" ").map(pair => pair.split(",").map(Number));
-      for (let i = 1; i < points.length; i++) {
-        lines.push([pen + points[i - 1][0], points[i - 1][1],
-                    pen + points[i][0], points[i][1]]);
+let wasm, device, context, pipeline, vertexBuffer, count=0, fallbackSvg=null;
+let extentX=0, extentY=7, offset=0, direction=1, last=0;
+const SPEED=160;
+async function initWasm() {
+  const response=await fetch("./text-layout.wasm");
+  if(!response.ok) throw new Error("WASM download failed: "+response.status);
+  const bytes=await response.arrayBuffer();
+  wasm=(await WebAssembly.instantiate(bytes)).instance.exports;
+}
+function layout(text) {
+  const bytes=encoder.encode(text.replace(/[^\x20-\x7e]/g,"?")).slice(0,100);
+  const view=new Uint8Array(wasm.memory.buffer);
+  view.set(bytes,1024);
+  const n=wasm.layout_text(1024,bytes.length,4096,100);
+  const out=new Int32Array(wasm.memory.buffer,4096,n*3);
+  return Array.from({length:n},(_,i)=>({char:String.fromCharCode(out[i*3]),x:out[i*3+1],y:out[i*3+2]}));
+}
+function shapes(text){
+  const glyphs=layout(text), rectangles=[];
+  for(const g of glyphs){
+    const rows=GLYPHS[g.char]||GLYPHS["?"];
+    for(let y=0;y<7;y++)for(let x=0;x<5;x++)if(rows[y][x]==="1") rectangles.push([g.x+x,g.y+y,0.88,0.88]);
+  }
+  extentX=Math.max(6,glyphs.length*6); extentY=7;
+  return rectangles;
+}
+function geometry(rects) {
+  const result=new Float32Array(rects.length*12);
+  let o=0;
+  for(const [x,y,w,h] of rects){
+    for(const v of [x,y,x+w,y,x,y+h,x+w,y,x+w,y+h,x,y+h])result[o++]=v;
+  }
+  return result;
+}
+async function initGpu() {
+  if(!navigator.gpu) throw new Error("WebGPU not available");
+  const adapter=await navigator.gpu.requestAdapter();
+  if(!adapter) throw new Error("No WebGPU adapter");
+  device=await adapter.requestDevice();
+  context=canvas.getContext("webgpu");
+  if(!context) throw new Error("WebGPU canvas unavailable");
+  const format=navigator.gpu.getPreferredCanvasFormat();
+  context.configure({device,format,alphaMode:"opaque"});
+  const shader=device.createShaderModule({code:`
+struct Params { values: vec4f }
+@group(0) @binding(0) var<uniform> params: Params;
+struct VertexOut { @builtin(position) position: vec4f }
+@vertex fn vs(@location(0) point: vec2f) -> VertexOut {
+ let size=params.values.xy;
+ let advance=params.values.z;
+ let shift=params.values.w;
+ let scale=min((size.x-24.0)/max(advance,1.0),(size.y-24.0)/7.0);
+ let pix=vec2f(12.0+shift+point.x*scale,(size.y-7.0*scale)/2.0+point.y*scale);
+ var out: VertexOut;
+ out.position=vec4f(pix.x/size.x*2.0-1.0,1.0-pix.y/size.y*2.0,0.0,1.0);
+ return out;
+}
+@fragment fn fs() -> @location(0) vec4f { return vec4f(1.0,0.71,0.26,1.0); }
+`});
+  pipeline=device.createRenderPipeline({
+    layout:"auto",vertex:{module:shader,entryPoint:"vs",buffers:[{arrayStride:8,attributes:[{shaderLocation:0,offset:0,format:"float32x2"}]}]},
+    fragment:{module:shader,entryPoint:"fs",targets:[{format}]},primitive:{topology:"triangle-list"}
+  });
+  const uniform=device.createBuffer({size:16,usage:GPUBufferUsage.UNIFORM|GPUBufferUsage.COPY_DST});
+  const bind=device.createBindGroup({layout:pipeline.getBindGroupLayout(0),entries:[{binding:0,resource:{buffer:uniform}}]});
+  return {uniform,bind};
+}
+function svgFallback(rects){
+  canvas.style.display="none";
+  fallbackSvg=document.createElementNS("http://www.w3.org/2000/svg","svg");
+  fallbackSvg.setAttribute("viewBox",`0 0 ${extentX} 7`);
+  fallbackSvg.setAttribute("preserveAspectRatio","xMidYMid meet");
+  fallbackSvg.style.cssText="width:100%;height:70vh;min-height:320px;overflow:visible;display:block";
+  const group=document.createElementNS("http://www.w3.org/2000/svg","g");
+  group.setAttribute("fill","#ffb542");
+  for(const [x,y,w,h] of rects){
+    const r=document.createElementNS("http://www.w3.org/2000/svg","rect");
+    for(const [k,v] of Object.entries({x,y,width:w,height:h}))r.setAttribute(k,v);
+    group.append(r);
+  }
+  fallbackSvg.append(group); canvas.after(fallbackSvg);
+  return group;
+}
+function resize(){
+  const dpr=Math.min(window.devicePixelRatio||1,2);
+  canvas.width=Math.max(1,Math.floor(canvas.clientWidth*dpr));
+  canvas.height=Math.max(1,Math.floor(canvas.clientHeight*dpr));
+}
+async function main(){
+  await initWasm();
+  let rects=shapes(input.value), gpu=null, svgGroup=null;
+  try{gpu=await initGpu();status.textContent="WebAssembly + WebGPU vector triangles";}
+  catch(err){status.textContent="WebAssembly + SVG fallback ("+err.message+")";svgGroup=svgFallback(rects);}
+  function update(){
+    rects=shapes(input.value);
+    offset=0;direction=1;
+    if(svgGroup){
+      svgGroup.replaceChildren();
+      for(const [x,y,w,h] of rects){
+        const r=document.createElementNS("http://www.w3.org/2000/svg","rect");
+        for(const [k,v] of Object.entries({x,y,width:w,height:h}))r.setAttribute(k,v);
+        svgGroup.append(r);
       }
+    }else{
+      const vertices=geometry(rects);count=vertices.length/2;
+      vertexBuffer?.destroy();
+      vertexBuffer=device.createBuffer({size:Math.max(4,vertices.byteLength),usage:GPUBufferUsage.VERTEX|GPUBufferUsage.COPY_DST});
+      if(vertices.byteLength)device.queue.writeBuffer(vertexBuffer,0,vertices);
     }
-    pen += 9;
   }
-  return { lines, width: Math.max(0, pen - 3) };
-}
-function makeTriangles(lines, scale, originY) {
-  const out = [];
-  for (const [x1, y1, x2, y2] of lines) {
-    const ax = x1 * scale, ay = originY + y1 * scale;
-    const bx = x2 * scale, by = originY + y2 * scale;
-    const dx = bx - ax, dy = by - ay;
-    const length = Math.hypot(dx, dy) || 1;
-    const nx = -dy / length * scale * 0.42;
-    const ny = dx / length * scale * 0.42;
-    out.push(ax + nx, ay + ny, ax - nx, ay - ny, bx + nx, by + ny,
-             bx + nx, by + ny, ax - nx, ay - ny, bx - nx, by - ny);
-  }
-  return new Float32Array(out);
-}
-const shader = `
-struct Uniforms { viewport: vec2f, offset: vec2f }
-@group(0) @binding(0) var<uniform> uniforms: Uniforms;
-struct VertexInput { @location(0) position: vec2f }
-struct VertexOutput { @builtin(position) position: vec4f }
-@vertex fn vs(input: VertexInput) -> VertexOutput {
-  let pixel = input.position + uniforms.offset;
-  let clip = vec2f(pixel.x / uniforms.viewport.x * 2.0 - 1.0,
-                   1.0 - pixel.y / uniforms.viewport.y * 2.0);
-  var output: VertexOutput;
-  output.position = vec4f(clip, 0.0, 1.0);
-  return output;
-}
-@fragment fn fs() -> @location(0) vec4f {
-  return vec4f(1.0, 0.76, 0.21, 1.0);
-}`;
-
-async function start() {
-  const wasmBytes = Uint8Array.from(atob(WASM_BASE64), char => char.charCodeAt(0));
-  let position;
-  let wasmActive = false;
-  try {
-    const wasm = await WebAssembly.instantiate(wasmBytes);
-    position = wasm.instance.exports.position;
-    wasmActive = true;
-  } catch (error) {
-    console.warn("WebAssembly unavailable, using JS motion:", error);
-    position = (t, length, speed) => {
-      if (length <= 0) return 0;
-      const segment = Math.floor(t * speed / length);
-      const part = t * speed / length - segment;
-      return length * (segment % 2 ? 1 - part : part);
-    };
-  }
-
-  let context, device, pipeline, bindGroup, vertexBuffer, uniformBuffer;
-  let webgpu = false;
-  if (navigator.gpu) {
-    try {
-      const adapter = await navigator.gpu.requestAdapter();
-      if (!adapter) throw new Error("No GPU adapter");
-      device = await adapter.requestDevice();
-      context = canvas.getContext("webgpu");
-      const format = navigator.gpu.getPreferredCanvasFormat();
-      context.configure({ device, format, alphaMode: "premultiplied" });
-      const module = device.createShaderModule({ code: shader });
-      pipeline = device.createRenderPipeline({
-        layout: "auto",
-        vertex: { module, entryPoint: "vs", buffers: [{
-          arrayStride: 8, attributes: [{ shaderLocation: 0, offset: 0, format: "float32x2" }]
-        }] },
-        fragment: { module, entryPoint: "fs", targets: [{ format }] },
-        primitive: { topology: "triangle-list" }
-      });
-      uniformBuffer = device.createBuffer({ size: 16, usage: GPUBufferUsage.UNIFORM | GPUBufferUsage.COPY_DST });
-      bindGroup = device.createBindGroup({ layout: pipeline.getBindGroupLayout(0), entries: [{
-        binding: 0, resource: { buffer: uniformBuffer }
-      }] });
-      webgpu = true;
-    } catch (error) { console.warn("WebGPU unavailable, using vector Canvas fallback:", error); }
-  }
-  const context2d = webgpu ? null : canvas.getContext("2d");
-  let data, triangles, scale, textWidth, y, dirty = true;
-  const speed = 260;
-  function rebuild() {
-    const viewportWidth = window.innerWidth;
-    const viewportHeight = window.innerHeight;
-    const ratio = Math.min(window.devicePixelRatio || 1, 2);
-    canvas.width = Math.round(viewportWidth * ratio);
-    canvas.height = Math.round(viewportHeight * ratio);
-    if (context2d) context2d.setTransform(ratio, 0, 0, ratio, 0, 0);
-    data = makeSegments(input.value.slice(0, 80));
-    scale = Math.min(4, Math.max(0.5, (viewportWidth - 20) / Math.max(1, data.width)));
-    textWidth = data.width * scale;
-    y = Math.max(25, viewportHeight * 0.22);
-    triangles = makeTriangles(data.lines, scale, y);
-    if (webgpu) {
-      if (vertexBuffer) vertexBuffer.destroy();
-      vertexBuffer = device.createBuffer({
-        size: Math.max(4, triangles.byteLength),
-        usage: GPUBufferUsage.VERTEX | GPUBufferUsage.COPY_DST
-      });
-      if (triangles.length) device.queue.writeBuffer(vertexBuffer, 0, triangles);
-    }
-    dirty = false;
-  }
-  input.addEventListener("input", () => { dirty = true; });
-  window.addEventListener("resize", () => { dirty = true; });
-  status.textContent = (webgpu ? "WebGPU vector triangles" : "Canvas 2D vector fallback") +
-    " · " + (wasmActive ? "WebAssembly animation" : "JavaScript animation") +
-    " · editable text";
-  const startTime = performance.now();
-  function frame(time) {
-    if (dirty) rebuild();
-    const travel = Math.max(0, window.innerWidth - textWidth);
-    const x = position((time - startTime) / 1000, travel, speed);
-    if (webgpu) {
-      device.queue.writeBuffer(uniformBuffer, 0, new Float32Array([window.innerWidth, window.innerHeight, x, 0]));
-      const encoder = device.createCommandEncoder();
-      const pass = encoder.beginRenderPass({
-        colorAttachments: [{
-          view: context.getCurrentTexture().createView(),
-          loadOp: "clear", storeOp: "store",
-          clearValue: { r: 0, g: 0, b: 0, a: 0 }
-        }]
-      });
-      pass.setPipeline(pipeline);
-      pass.setBindGroup(0, bindGroup);
-      pass.setVertexBuffer(0, vertexBuffer);
-      pass.draw(triangles.length / 2);
-      pass.end();
-      device.queue.submit([encoder.finish()]);
-    } else {
-      context2d.clearRect(0, 0, canvas.width, canvas.height);
-      context2d.save();
-      context2d.translate(x, y);
-      context2d.strokeStyle = "#ffca54";
-      context2d.lineWidth = scale * 0.84;
-      context2d.lineCap = "round";
-      context2d.lineJoin = "round";
-      context2d.beginPath();
-      for (const [x1, y1, x2, y2] of data.lines) {
-        context2d.moveTo(x1 * scale, y1 * scale);
-        context2d.lineTo(x2 * scale, y2 * scale);
+  input.addEventListener("input",update);
+  update();
+  function render(time){
+    const dt=last?Math.min((time-last)/1000,.05):0;last=time;
+    if(gpu){
+      resize();
+      const scale=Math.min((canvas.width-24)/Math.max(extentX,1),(canvas.height-24)/7);
+      const maxOffset=Math.max(0,canvas.width-24-extentX*scale);
+      if(!matchMedia("(prefers-reduced-motion: reduce)").matches){
+        offset+=direction*SPEED*(window.devicePixelRatio||1)*dt;
+        if(offset>maxOffset){offset=maxOffset;direction=-1;}
+        if(offset<0){offset=0;direction=1;}
       }
-      context2d.stroke();
-      context2d.restore();
+      device.queue.writeBuffer(gpu.uniform,0,new Float32Array([canvas.width,canvas.height,extentX,offset]));
+      const pass=device.createCommandEncoder();
+      const rp=pass.beginRenderPass({colorAttachments:[{view:context.getCurrentTexture().createView(),loadOp:"clear",storeOp:"store",clearValue:{r:.063,g:.071,b:.102,a:1}}]});
+      rp.setPipeline(pipeline);rp.setBindGroup(0,gpu.bind);rp.setVertexBuffer(0,vertexBuffer);rp.draw(count);rp.end();
+      device.queue.submit([pass.finish()]);
+    }else if(svgGroup && !matchMedia("(prefers-reduced-motion: reduce)").matches){
+      // SVG uses the same vector rectangles when WebGPU is unavailable.
+      const maxOffset=2;
+      offset+=direction*dt*.35;
+      if(offset>maxOffset){offset=maxOffset;direction=-1;}
+      if(offset<0){offset=0;direction=1;}
+      svgGroup.setAttribute("transform",`translate(${offset},0)`);
     }
-    requestAnimationFrame(frame);
+    requestAnimationFrame(render);
   }
-  requestAnimationFrame(frame);
+  requestAnimationFrame(render);
 }
-start().catch(error => {
-  console.error(error);
-  status.textContent = "Renderer error: " + error.message;
-});
+main().catch(err=>{status.textContent="Startup error: "+err.message;console.error(err);});
