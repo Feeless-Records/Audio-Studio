@@ -34,6 +34,8 @@ class AudioStudioApp {
     this.frequencySlider=controls.frequencySlider;
     this.frequencyValue=controls.frequencyValue;
     this.chordField=controls.chordField;
+    this.quintButton=controls.quintButton;
+    this.quintButton.addEventListener("click",()=>this.toggleQuintCircle());
     this.updateChord([]);
     this.fft=new FFTAnalyzer(controls.fftCanvas,[this.saw,this.audio]);
     this.fft.start();
@@ -52,6 +54,19 @@ class AudioStudioApp {
       console.error(error);
     }
     window.addEventListener("pagehide",()=>this.stop(),{once:true});
+  }
+  toggleQuintCircle(){
+    if(!this.quintCircle){
+      this.quintCircle=document.createElement("img");
+      this.quintCircle.id="quintCircle";
+      this.quintCircle.src="./quint-circle.jpg";
+      this.quintCircle.alt="Квинтовый круг: мажорные и минорные тональности";
+      document.body.append(this.quintCircle);
+    }
+    this.quintCircle.hidden=!this.quintCircle.hidden;
+    const visible=!this.quintCircle.hidden;
+    this.quintButton.setAttribute("aria-pressed",String(visible));
+    this.quintButton.textContent=visible?"Hide quint circle":"Show quint circle";
   }
   updateChord(notes){
     if(!this.chordField)return;
