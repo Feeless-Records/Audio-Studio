@@ -17,7 +17,7 @@ class AudioStudioApp {
   async start(){
     this.theme.apply("dark");
     const button=this.layout.renderWelcome("Hello World!","Welcome to Feeless Records Audio Studio.");
-    button.addEventListener("click",()=>this.playTone(button));
+    button.addEventListener("click",()=>this.playSound(button));
     this.label.textContent=this.message;
     this.animation.start();
     try{
@@ -31,12 +31,12 @@ class AudioStudioApp {
     }
     window.addEventListener("pagehide",()=>this.stop(),{once:true});
   }
-  async playTone(button){
+  async playSound(button){
     if(this.audio.playing)return;
     button.classList.add("is-playing");
     button.setAttribute("aria-pressed","true");
     button.disabled=true;
-    try{await this.audio.playSine(600,1);}
+    try{await this.audio.play();}
     catch(error){console.error(error);this.status.textContent="Audio error: "+error.message;}
     finally{
       button.classList.remove("is-playing");
