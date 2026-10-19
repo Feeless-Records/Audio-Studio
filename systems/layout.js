@@ -6,9 +6,20 @@ export class LayoutSystem {
     const button=document.createElement("button");
     button.type="button";button.id="startButton";button.textContent="Play Sample";
     button.setAttribute("aria-pressed","false");
+    const saw=document.createElement("button");
+    saw.type="button";saw.id="sawButton";saw.textContent="Play Saw Wave";
+    saw.setAttribute("aria-pressed","false");
+    const label=document.createElement("label");
+    label.htmlFor="frequencySlider";label.className="frequency-label";
+    label.textContent="Frequency: ";
+    const value=document.createElement("output");value.id="frequencyValue";value.textContent="440 Hz";
+    label.append(value);
+    const slider=document.createElement("input");
+    slider.type="range";slider.id="frequencySlider";slider.min="20";slider.max="20000";
+    slider.step="1";slider.value="440";slider.setAttribute("aria-label","Saw wave frequency in Hz");
     const p=document.createElement("p");p.textContent=subtitle;
-    group.append(h,button,p);
+    group.append(h,button,saw,label,slider,p);
     this.root.replaceChildren(group);
-    return button;
+    return {startButton:button,sawButton:saw,frequencySlider:slider,frequencyValue:value};
   }
 }
