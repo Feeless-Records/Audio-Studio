@@ -3,10 +3,12 @@ import {LayoutSystem} from "./systems/layout.js";
 import {ThemeSystem} from "./systems/theme.js";
 import {TextSystem} from "./systems/text-system.js";
 import {AudioSystem} from "./systems/audio.js";
+import {SawWaveSystem} from "./systems/saw-wave.js";
 class AudioStudioApp {
   constructor(){
     this.theme=new ThemeSystem();
     this.audio=new AudioSystem();
+    this.saw=new SawWaveSystem();
     this.layout=new LayoutSystem(document.querySelector("#app"));
     this.animation=new AnimationSystem(document.querySelector(".fly-track"));
     this.text=new TextSystem(document.querySelector("#flying"));
@@ -16,8 +18,13 @@ class AudioStudioApp {
   }
   async start(){
     this.theme.apply("dark");
-    this.startButton=this.layout.renderWelcome("Hello World!","Welcome to Feeless Records Audio Studio.");
+    const controls=this.layout.renderWelcome("Hello World!","Welcome to Feeless Records Audio Studio.");
+    this.startButton=controls.startButton;
+    this.sawButton=controls.sawButton;
+    this.frequencySlider=controls.frequencySlider;
+    this.frequencyValue=controls.frequencyValue;
     this.startButton.addEventListener("click",()=>this.playSound(this.startButton));
+    this.configureSaw();
     this.label.textContent=this.message;
     this.animation.start();
     try{
@@ -30,6 +37,46 @@ class AudioStudioApp {
       console.error(error);
     }
     window.addEventListener("pagehide",()=>this.stop(),{once:true});
+  }
+  configureSaw(){
+    const button=this.sawButton;
+    const release=()=>this.releaseSaw();
+    button.addEventListener("pointerdown",event=>{
+      if(event.button!==0||this.saw.held)return;
+      event.preventDefault();button.setPointerCapture(event.pointerId);
+      this.pressSaw();
+    });
+    button.addEventListener("pointerup",release);
+    button.addEventListener("pointercancel",release);
+    button.addEventListener("lostpointercapture",release);
+    button.addEventListener("keydown",event=>{
+      if((event.code==="Space"||event.code==="Enter")&&!event.repeat){
+        event.preventDefault();this.pressSaw();
+      }
+    });
+    button.addEventListener("keyup",event=>{
+      if(event.code==="Space"||event.code==="Enter"){event.preventDefault();release();}
+    });
+    window.addEventListener("blur",release);
+    document.addEventListener("visibilitychange",()=>{if(document.hidden)release();});
+    this.frequencySlider.addEventListener("input",()=>this.updateFrequency());
+    this.updateFrequency();
+  }
+  updateFrequency(){
+    const frequency=Number(this.frequencySlider.value);
+    this.saw.setFrequency(frequency);
+    this.frequencyValue.textContent=frequency.toLocaleString("ru-RU")+" Hz";
+  }
+  async pressSaw(){
+    this.sawButton.classList.add("is-playing");
+    this.sawButton.setAttribute("aria-pressed","true");
+    try{await this.saw.press();}
+    catch(error){this.status.textContent="Saw audio error: "+error.message;this.releaseSaw();}
+  }
+  releaseSaw(){
+    this.saw.release();
+    this.sawButton.classList.remove("is-playing");
+    this.sawButton.setAttribute("aria-pressed","false");
   }
   async playSound(button){
     if(this.audio.playing)return;
@@ -44,6 +91,6 @@ class AudioStudioApp {
       button.disabled=false;
     }
   }
-  stop(){this.animation.stop();}
+  stop(){this.releaseSaw();this.animation.stop();}
 }
 new AudioStudioApp().start();
