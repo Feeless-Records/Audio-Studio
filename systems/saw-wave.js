@@ -1,7 +1,7 @@
 export class SawWaveSystem {
   constructor(){
     this.context=null;this.oscillator=null;this.gain=null;
-    this.frequency=440;this.held=false;this.generation=0;this.analyser=null;
+    this.outputGain=Math.pow(10,-3/20);this.frequency=440;this.held=false;this.generation=0;this.analyser=null;
   }
   setFrequency(value){
     this.frequency=Math.max(20,Math.min(20000,Number(value)||440));
@@ -24,7 +24,7 @@ export class SawWaveSystem {
       oscillator.type="sawtooth";
       oscillator.frequency.setValueAtTime(Math.min(this.frequency,this.context.sampleRate/2-1),now);
       gain.gain.setValueAtTime(0,now);
-      gain.gain.linearRampToValueAtTime(.12,now+.012);
+      gain.gain.linearRampToValueAtTime(this.outputGain,now+.012);
       oscillator.connect(gain);
       if(!this.analyser){this.analyser=this.context.createAnalyser();this.analyser.fftSize=4096;this.analyser.minDecibels=-60;this.analyser.maxDecibels=0;this.analyser.smoothingTimeConstant=.65;this.analyser.connect(this.context.destination);}
       gain.connect(this.analyser);
