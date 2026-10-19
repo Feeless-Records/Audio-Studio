@@ -1,0 +1,43 @@
+export class SawWaveSystem {
+  constructor(){
+    this.context=null;this.oscillator=null;this.gain=null;
+    this.frequency=440;this.held=false;this.generation=0;
+  }
+  setFrequency(value){
+    this.frequency=Math.max(20,Math.min(20000,Number(value)||440));
+    if(this.oscillator && this.context){
+      this.oscillator.frequency.setTargetAtTime(
+        Math.min(this.frequency,this.context.sampleRate/2-1),this.context.currentTime,.008);
+    }
+  }
+  async press(){
+    if(this.held)return;
+    this.held=true;
+    const generation=++this.generation;
+    try{
+      if(!this.context)this.context=new (window.AudioContext||window.webkitAudioContext)();
+      await this.context.resume();
+      if(!this.held||generation!==this.generation)return;
+      const now=this.context.currentTime;
+      const oscillator=this.context.createOscillator();
+      const gain=this.context.createGain();
+      oscillator.type="sawtooth";
+      oscillator.frequency.setValueAtTime(Math.min(this.frequency,this.context.sampleRate/2-1),now);
+      gain.gain.setValueAtTime(0,now);
+      gain.gain.linearRampToValueAtTime(.12,now+.012);
+      oscillator.connect(gain);gain.connect(this.context.destination);
+      oscillator.onended=()=>{oscillator.disconnect();gain.disconnect();};
+      this.oscillator=oscillator;this.gain=gain;oscillator.start(now);
+    }catch(error){this.release();throw error;}
+  }
+  release(){
+    this.held=false;++this.generation;
+    if(!this.oscillator||!this.context)return;
+    const now=this.context.currentTime;
+    this.gain.gain.cancelScheduledValues(now);
+    this.gain.gain.setValueAtTime(this.gain.gain.value,now);
+    this.gain.gain.linearRampToValueAtTime(0,now+.018);
+    this.oscillator.stop(now+.02);
+    this.oscillator=null;this.gain=null;
+  }
+}
