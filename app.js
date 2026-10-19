@@ -6,7 +6,7 @@ import {TextSystem} from "./systems/text-system.js";
 import {AudioSystem} from "./systems/audio.js";
 import {SimpleSynth} from "./systems/simple-synth.js";
 import {FFTAnalyzer} from "./systems/fft-analyzer.js";
-import {StudioCore} from "./systems/studio-core.js";
+import {StudioCore} from "./systems/studio-core.js?v=transport-2";
 import {KeyboardSystem} from "./systems/keyboard.js";
 import {ChordSystem} from "./systems/chord.js";
 import {MIDISystem} from "./systems/midi.js";
@@ -17,8 +17,9 @@ class AudioStudioApp {
     this.core=new StudioCore({bpm:120});
     this.theme=new ThemeSystem();
     this.master=new MasterVolumeSystem(100);
-    this.audio=new AudioSystem("./Perkele!.wav",this.master);
-    this.saw=new SimpleSynth(this.master);
+    this.core.transportController.engine.master=this.master;
+    this.audio=new AudioSystem("./Perkele!.wav",this.master,this.core.transportController.engine);
+    this.saw=new SimpleSynth(this.master,this.core.transportController.engine);
     this.chords=new ChordSystem();
     this.keyboard=new KeyboardSystem(this.saw,{onError:error=>{this.status.textContent="Keyboard audio error: "+error.message;},onNotesChanged:notes=>{this.keyboardNotes=notes;this.updateChord();}});
     this.midiNotes=[];
@@ -147,7 +148,7 @@ class AudioStudioApp {
       button.disabled=false;
     }
   }
-  resume(){this.browser.start();this.keyboard.start();this.midi.start();this.animation.start();this.fft?.start();}
-  stop(){this.masterKnob?.stop();this.audio.stop();this.browser.stop();this.keyboard.stop();this.midi.stop();this.releaseSaw();this.animation.stop();this.fft?.stop();}
+  resume(){this.masterKnob?.start();this.browser.start();this.keyboard.start();this.midi.start();this.animation.start();this.fft?.start();}
+  stop(){this.core?.transportController.stop();this.masterKnob?.stop();this.audio.stop();this.browser.stop();this.keyboard.stop();this.midi.stop();this.releaseSaw();this.animation.stop();this.fft?.stop();}
 }
 new AudioStudioApp().start();

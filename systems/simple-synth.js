@@ -1,5 +1,6 @@
 export class SimpleSynth {
-  constructor(master=null){
+  constructor(master=null,engine=null){
+    this.engine=engine;this.engine?.register({stop:()=>{this.release();this.releaseAllNotes();}});
     this.master=master;
     this.context=null;this.oscillator=null;this.gain=null;
     this.outputGain=Math.pow(10,-3/20);this.frequency=440;this.held=false;this.generation=0;this.analyser=null;
@@ -13,12 +14,13 @@ export class SimpleSynth {
     }
   }
   async ensureContext(){
-    if(!this.context)this.context=new (window.AudioContext||window.webkitAudioContext)();
+    if(!this.context)this.context=this.engine?this.engine.getContext():new (window.AudioContext||window.webkitAudioContext)();
     if(!this.analyser){
       this.analyser=this.context.createAnalyser();
       this.analyser.fftSize=4096;this.analyser.minDecibels=-60;
       this.analyser.maxDecibels=0;this.analyser.smoothingTimeConstant=.65;
-      if(this.master)this.master.attach(this.context,this.analyser);
+      if(this.engine)this.analyser.connect(this.engine.input);
+      else if(this.master)this.master.attach(this.context,this.analyser);
       else this.analyser.connect(this.context.destination);
     }
     await this.context.resume();

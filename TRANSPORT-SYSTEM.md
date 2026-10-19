@@ -5,7 +5,7 @@ Implemented 2026-10-19.
 StudioCore.transportController is the application controller.
 StudioCore.workflow.transport remains its shared beat clock.
 AudioEngineSystem owns one lazily-created AudioContext per StudioCore.
-AudioSystem sample audition, SawWaveSystem live voices and transport SoundSystem use that context and feed the common processing input on the front page.
+AudioSystem sample audition, SimpleSynth live voices and transport SoundSystem use that context and feed the common processing input on the front page.
 The desktop has its own StudioCore/audio engine because it is a separate page.
 
 Signal path:
