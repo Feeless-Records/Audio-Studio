@@ -6,12 +6,14 @@ import {AudioSystem} from "./systems/audio.js";
 import {SawWaveSystem} from "./systems/saw-wave.js";
 import {FFTAnalyzer} from "./systems/fft-analyzer.js";
 import {StudioCore} from "./systems/studio-core.js";
+import {KeyboardSystem} from "./systems/keyboard.js";
 class AudioStudioApp {
   constructor(){
     this.core=new StudioCore({bpm:120});
     this.theme=new ThemeSystem();
     this.audio=new AudioSystem();
     this.saw=new SawWaveSystem();
+    this.keyboard=new KeyboardSystem(this.saw,{onError:error=>{this.status.textContent="Keyboard audio error: "+error.message;}});
     this.layout=new LayoutSystem(document.querySelector("#app"));
     this.animation=new AnimationSystem(document.querySelector(".fly-track"));
     this.text=new TextSystem(document.querySelector("#flying"));
@@ -30,6 +32,7 @@ class AudioStudioApp {
     this.fft.start();
     this.startButton.addEventListener("click",()=>this.playSound(this.startButton));
     this.configureSaw();
+    this.keyboard.start();
     this.label.textContent=this.message;
     this.animation.start();
     try{
@@ -97,6 +100,6 @@ class AudioStudioApp {
       button.disabled=false;
     }
   }
-  stop(){this.releaseSaw();this.animation.stop();this.fft?.stop();}
+  stop(){this.keyboard.stop();this.releaseSaw();this.animation.stop();this.fft?.stop();}
 }
 new AudioStudioApp().start();
