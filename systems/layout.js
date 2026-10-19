@@ -27,12 +27,25 @@ export class LayoutSystem {
     const quintButton=document.createElement("button");
     quintButton.type="button";quintButton.id="quintButton";quintButton.textContent="Show quint circle";
     quintButton.setAttribute("aria-pressed","false");
+    const volumeGroup=document.createElement("div");
+    volumeGroup.className="master-volume";
+    const volumeLabel=document.createElement("div");
+    volumeLabel.textContent="MASTER VOLUME";
+    volumeLabel.className="master-volume-label";
+    const knob=document.createElement("div");
+    knob.id="masterVolumeKnob";knob.tabIndex=0;knob.setAttribute("role","slider");
+    knob.setAttribute("aria-label","Master volume");
+    knob.setAttribute("aria-valuemin","0");knob.setAttribute("aria-valuemax","100");
+    knob.setAttribute("aria-orientation","vertical");
+    const pointer=document.createElement("span");pointer.className="knob-pointer";knob.append(pointer);
+    const volumeValue=document.createElement("output");volumeValue.id="masterVolumeValue";
+    volumeGroup.append(volumeLabel,knob,volumeValue);
     const p=document.createElement("p");p.textContent=subtitle;
     const hint=document.createElement("p");
     hint.className="keyboard-hint";
     hint.textContent="Keyboard: Q 2 W 3 E ... [ = ] (C4–G5), Z S X D C ... / (C3–E4). Hold keys to play notes.";
-    group.append(h,button,saw,label,slider,fftCanvas,chordField,quintButton,hint,p);
+    group.append(h,volumeGroup,button,saw,label,slider,fftCanvas,chordField,quintButton,hint,p);
     this.root.replaceChildren(group);
-    return {startButton:button,sawButton:saw,frequencySlider:slider,frequencyValue:value,fftCanvas,chordField,quintButton};
+    return {startButton:button,sawButton:saw,frequencySlider:slider,frequencyValue:value,fftCanvas,chordField,quintButton,masterKnob:knob,masterValue:volumeValue};
   }
 }
