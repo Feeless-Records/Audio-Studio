@@ -1,5 +1,5 @@
-// Text -> WebAssembly glyph layout -> vector triangles (5x7 demo font).
-const GLYPHS = {
+export class TextProcessor {
+  static GLYPHS = {
 " ":["00000","00000","00000","00000","00000","00000","00000"],
 "!":["00100","00100","00100","00100","00100","00000","00100"],
 "?":["01110","10001","00001","00010","00100","00000","00100"],
@@ -42,27 +42,31 @@ const GLYPHS = {
 "8":["01110","10001","10001","01110","10001","10001","01110"],
 "9":["01110","10001","10001","01111","00001","00001","01110"]
 };
-
-export async function loadLayout() {
-  const response = await fetch("./text-layout.wasm");
-  if (!response.ok) throw new Error("Could not load WebAssembly: " + response.status);
-  const {instance} = await WebAssembly.instantiate(await response.arrayBuffer());
-  return instance.exports;
-}
-export function makeRectangles(wasm, message) {
-  const ascii = new TextEncoder().encode(message.toUpperCase());
-  new Uint8Array(wasm.memory.buffer).set(ascii, 1024);
-  const count = wasm.layout_text(1024, ascii.length, 4096, 100);
-  const positions = new Int32Array(wasm.memory.buffer, 4096, count * 3);
-  const vertices = [];
-  for (let i = 0; i < count; i++) {
-    const glyph = GLYPHS[String.fromCharCode(positions[i * 3])] || GLYPHS["?"];
-    const gx = positions[i * 3 + 1], gy = positions[i * 3 + 2];
-    for (let row = 0; row < 7; row++) for (let col = 0; col < 5; col++) {
-      if (glyph[row][col] !== "1") continue;
-      const x = gx + col, y = gy + row, r = 0.88;
-      vertices.push(x,y, x+r,y, x,y+r, x+r,y, x+r,y+r, x,y+r);
-    }
+  constructor(){this.wasm=null;this.encoder=new TextEncoder();}
+  async initialize(){
+    const response=await fetch("./text-layout.wasm");
+    if(!response.ok)throw new Error("WASM HTTP "+response.status);
+    const {instance}=await WebAssembly.instantiate(await response.arrayBuffer());
+    this.wasm=instance.exports;return this;
   }
-  return {vertices:new Float32Array(vertices),width:Math.max(6,count*6)};
+  process(message){
+    if(!this.wasm)throw new Error("TextProcessor not initialized");
+    const ascii=this.encoder.encode(message.toUpperCase().replace(/[^\x20-\x7e]/g,"?")).slice(0,100);
+    new Uint8Array(this.wasm.memory.buffer).set(ascii,1024);
+    const count=this.wasm.layout_text(1024,ascii.length,4096,100);
+    const positions=new Int32Array(this.wasm.memory.buffer,4096,count*3);
+    const vertices=[];
+    for(let i=0;i<count;i++)this.appendGlyph(positions,i,vertices);
+    return {vertices:new Float32Array(vertices),width:Math.max(6,count*6)};
+  }
+  appendGlyph(positions,i,vertices){
+    const glyph=TextProcessor.GLYPHS[String.fromCharCode(positions[i*3])]||TextProcessor.GLYPHS["?"];
+    const gx=positions[i*3+1],gy=positions[i*3+2];
+    for(let row=0;row<7;row++)for(let col=0;col<5;col++)this.appendPixel(glyph,row,col,gx,gy,vertices);
+  }
+  appendPixel(glyph,row,col,gx,gy,vertices){
+    if(glyph[row][col]!=="1")return;
+    const x=gx+col,y=gy+row,r=.88;
+    vertices.push(x,y,x+r,y,x,y+r,x+r,y,x+r,y+r,x,y+r);
+  }
 }
