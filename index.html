@@ -14,14 +14,17 @@ h1{font-size:clamp(2.5rem,7vw,5rem);margin:0}
 p{margin:0;color:#aeb5c6}
 .welcome-group{display:flex;flex-direction:column;align-items:stretch;gap:12px}
 .welcome-group h1{white-space:nowrap}
-#startButton,#sawButton{height:1cm;min-height:38px;width:100%;border:1px solid #f6c16c;border-radius:7px;background:#222a3b;color:#ffda9b;font:600 16px system-ui,sans-serif;cursor:pointer;transition:background .1s,color .1s,transform .1s,box-shadow .1s}
-#startButton:active,#startButton.is-playing,#sawButton:active,#sawButton.is-playing{background:#ffb542;color:#131722;transform:translateY(2px);box-shadow:inset 0 3px 8px #0007}
-#startButton:focus-visible,#sawButton:focus-visible{outline:3px solid #fff;outline-offset:3px}
+#startButton,#sawButton,#quintButton{height:1cm;min-height:38px;width:100%;border:1px solid #f6c16c;border-radius:7px;background:#222a3b;color:#ffda9b;font:600 16px system-ui,sans-serif;cursor:pointer;transition:background .1s,color .1s,transform .1s,box-shadow .1s}
+#startButton:active,#startButton.is-playing,#sawButton:active,#sawButton.is-playing,#quintButton:active,#quintButton[aria-pressed="true"]{background:#ffb542;color:#131722;transform:translateY(2px);box-shadow:inset 0 3px 8px #0007}
+#startButton:focus-visible,#sawButton:focus-visible,#quintButton:focus-visible{outline:3px solid #fff;outline-offset:3px}
 .frequency-label{font-size:13px;color:#aeb5c6;display:flex;justify-content:space-between;align-items:center}
 #frequencySlider{width:100%;accent-color:#ffb542;cursor:pointer;touch-action:pan-y}
 #sawButton{touch-action:none}
 #fftAnalyzer{display:block;width:100%;height:4cm;min-height:130px;border:1px solid #424c64;border-radius:5px;background:#151b29}
 #chordDisplay{width:100%;min-height:39px;padding:9px;border:1px solid #424c64;border-radius:6px;background:#151b29;color:#ffda9b;font:500 13px system-ui,sans-serif;text-align:center;overflow-wrap:anywhere}
+#quintCircle{position:fixed;top:12px;left:12px;width:min(440px,45vw);max-height:calc(100dvh - 24px);object-fit:contain;z-index:100;background:#000;border:1px solid #5b6375;border-radius:8px;box-shadow:0 10px 40px #0009;pointer-events:none}
+#quintCircle[hidden]{display:none}
+@media(max-width:650px){#quintCircle{width:min(92vw,440px)}}
 .fly-track{position:fixed;inset:0;width:100vw;height:100vh;overflow:hidden;pointer-events:none;--fly-x:0px;--fly-y:0px}
 #flying,.fly-track>svg,#flying-label{
   position:absolute;top:0;left:0;width:min(540px,75vw);height:100px;
@@ -42,7 +45,7 @@ main{height:auto;min-height:100vh;min-height:100dvh;padding:24px 16px 72px}
 .welcome-group p{overflow-wrap:anywhere}
 #chordDisplay{box-sizing:border-box}
 #status{position:static;margin:0 16px 16px;overflow-wrap:anywhere}
-html[data-device="mobile"] #startButton,html[data-device="mobile"] #sawButton{min-height:44px}
+html[data-device="mobile"] #startButton,html[data-device="mobile"] #sawButton,html[data-device="mobile"] #quintButton{min-height:44px}
 html[data-device="mobile"] .keyboard-hint{font-size:12px}
 html[data-orientation="landscape"][data-device="mobile"] main{padding-top:16px}
 </style>
