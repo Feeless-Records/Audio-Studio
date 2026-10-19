@@ -1,17 +1,17 @@
 import {FrequencySystem} from "./frequency.js";
 export class MIDISystem {
-  constructor(synth,{onNotesChanged=()=>{},onStatus=()=>{},onError=console.error}={}){
-    this.synth=synth;this.onNotesChanged=onNotesChanged;this.onStatus=onStatus;this.onError=onError;
+  constructor(synth,{onNotesChanged=()=>{},onStatus=()=>{},onDevicesChanged=()=>{},onError=console.error}={}){
+    this.synth=synth;this.onNotesChanged=onNotesChanged;this.onStatus=onStatus;this.onDevicesChanged=onDevicesChanged;this.onError=onError;
     this.access=null;this.active=new Map();this.inputs=new Map();this.tuningReference=440;
     this.stateChange=this.stateChange.bind(this);
   }
   async start(){
-    if(!navigator.requestMIDIAccess){this.onStatus("Web MIDI unavailable");return false;}
+    if(!navigator.requestMIDIAccess){this.onStatus("Web MIDI unavailable");this.onDevicesChanged({inputs:[],outputs:[]});return false;}
     try{
       this.access=await navigator.requestMIDIAccess({sysex:false});
       this.access.addEventListener("statechange",this.stateChange);
-      this.refreshInputs();this.onStatus("MIDI ready");return true;
-    }catch(error){this.onStatus("MIDI access denied");this.onError(error);return false;}
+      this.refreshInputs();return true;
+    }catch(error){this.onStatus("MIDI access denied");this.onDevicesChanged({inputs:[],outputs:[]});this.onError(error);return false;}
   }
   refreshInputs(){
     const available=new Map(this.access?.inputs||[]);
@@ -23,6 +23,11 @@ export class MIDISystem {
       input.addEventListener("midimessage",this.listenerFor(id));this.inputs.set(id,input);
     }
     this.onStatus(this.inputs.size+" MIDI input(s)");
+    this.onDevicesChanged(this.getDevices());
+  }
+  getDevices(){
+    const describe=port=>({id:port.id,name:port.name||"Unnamed MIDI device",manufacturer:port.manufacturer||"",state:port.state||"unknown",connection:port.connection||"unknown"});
+    return {inputs:[...(this.access?.inputs?.values()||[])].map(describe),outputs:[...(this.access?.outputs?.values()||[])].map(describe)};
   }
   listenerFor(id){
     if(!this.listeners)this.listeners=new Map();
@@ -55,6 +60,6 @@ export class MIDISystem {
     this.releaseAll();
     this.access?.removeEventListener("statechange",this.stateChange);
     for(const [id,input] of this.inputs)input.removeEventListener("midimessage",this.listenerFor(id));
-    this.inputs.clear();this.access=null;
+    this.inputs.clear();this.access=null;this.onDevicesChanged({inputs:[],outputs:[]});
   }
 }
