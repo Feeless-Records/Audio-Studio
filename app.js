@@ -74,6 +74,7 @@ class AudioStudioApp {
     const position=Number(this.frequencySlider.value)/1000;
     const frequency=Math.round(20*Math.pow(1000,position));
     this.saw.setFrequency(frequency);
+    this.keyboard.setTuningReference(frequency);
     this.frequencyValue.textContent=frequency.toLocaleString("ru-RU")+" Hz";
   }
   async pressSaw(){
