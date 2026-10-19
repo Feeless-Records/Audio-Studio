@@ -24,7 +24,7 @@ class AudioStudioApp {
     this.keyboard=new KeyboardSystem(this.saw,{onError:error=>{this.status.textContent="Keyboard audio error: "+error.message;},onNotesChanged:notes=>{this.keyboardNotes=notes;this.updateChord();}});
     this.midiNotes=[];
     this.keyboardNotes=[];
-    this.midi=new MIDISystem(this.saw,{onNotesChanged:notes=>{this.midiNotes=notes;this.updateChord();},onStatus:state=>{this.midiStatus=state;},onError:error=>console.warn("MIDI:",error)});
+    this.midi=new MIDISystem(this.saw,{onNotesChanged:notes=>{this.midiNotes=notes;this.updateChord();},onStatus:state=>{this.midiStatus=state;this.updateMIDIStatus();},onDevicesChanged:devices=>this.renderMIDIDevices(devices),onError:error=>console.warn("MIDI:",error)});
     this.layout=new LayoutSystem(document.querySelector("#app"));
     this.animation=new AnimationSystem(document.querySelector(".fly-track"));
     this.text=new TextSystem(document.querySelector("#flying"));
@@ -42,6 +42,11 @@ class AudioStudioApp {
     this.frequencySlider=controls.frequencySlider;
     this.frequencyValue=controls.frequencyValue;
     this.chordField=controls.chordField;
+    this.midiDeviceStatus=controls.midiStatus;
+    this.midiInputsList=controls.midiInputs;
+    this.midiOutputsList=controls.midiOutputs;
+    this.renderMIDIDevices({inputs:[],outputs:[]});
+    this.updateMIDIStatus();
     this.quintButton=controls.quintButton;
     this.quintButton.addEventListener("click",()=>this.toggleQuintCircle());
     this.updateChord([]);
@@ -65,6 +70,22 @@ class AudioStudioApp {
       console.error(error);
     }
 
+  }
+  updateMIDIStatus(){if(this.midiDeviceStatus)this.midiDeviceStatus.textContent=this.midiStatus||"Checking MIDI access…";}
+  renderMIDIDevices(devices){
+    if(!this.midiInputsList||!this.midiOutputsList)return;
+    const render=(list,ports)=>{
+      list.replaceChildren();
+      if(!ports.length){const item=document.createElement("li");item.textContent="No devices detected";list.append(item);return;}
+      for(const port of ports){
+        const item=document.createElement("li");
+        const name=document.createElement("strong");name.textContent=port.name;
+        const detail=document.createElement("small");detail.textContent=[port.manufacturer,port.state,port.connection].filter(Boolean).join(" · ");
+        item.append(name,detail);list.append(item);
+      }
+    };
+    render(this.midiInputsList,devices.inputs);
+    render(this.midiOutputsList,devices.outputs);
   }
   toggleQuintCircle(){
     if(!this.quintCircle){
