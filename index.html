@@ -12,15 +12,15 @@ body{background:#10121a;color:#eef1f8;font-family:system-ui,sans-serif;overflow:
 main{height:100%;display:grid;place-content:center;text-align:center;gap:12px}
 h1{font-size:clamp(2.5rem,7vw,5rem);margin:0}
 p{margin:0;color:#aeb5c6}
-.fly-track{position:fixed;top:14%;left:0;width:100%;height:150px;overflow:hidden;pointer-events:none}
-#flying,.fly-track>svg,#flying-label{position:absolute;top:0;left:0;width:min(540px,75vw);height:100px;display:block}
-#flying,.fly-track>svg{opacity:.2}
-#flying-label{display:flex;align-items:center;justify-content:center;font-size:clamp(20px,3.3vw,37px);font-weight:900;white-space:nowrap;color:#ffb542;text-shadow:0 0 12px #fb923c,0 0 28px #ea580c}
-.fly-track .flying-motion{animation:fly-across 4s linear infinite alternate;will-change:transform}
-@keyframes fly-across{
-  0%{transform:translate3d(0,0,0)}
-  100%{transform:translate3d(calc(100vw - min(540px,75vw)),35px,0)}
+.fly-track{position:fixed;top:14%;left:0;width:100%;height:150px;overflow:hidden;pointer-events:none;--fly-x:0px;--fly-y:0px}
+#flying,.fly-track>svg,#flying-label{
+  position:absolute;top:0;left:0;width:min(540px,75vw);height:100px;
+  display:block;transform:translate3d(var(--fly-x),var(--fly-y),0);will-change:transform
 }
+#flying{background:transparent}
+.fly-track>svg{overflow:visible}
+#flying-label{display:flex;align-items:center;justify-content:center;font-size:clamp(20px,3.3vw,37px);font-weight:900;white-space:nowrap;color:#ffb542;text-shadow:0 0 12px #fb923c,0 0 28px #ea580c}
+#flying-label[hidden]{display:none}
 #status{position:fixed;bottom:16px;left:20px;font-size:12px;color:#92a0b6}
 @media(prefers-reduced-motion:reduce){.fly-track .flying-motion{animation:none}}
 </style>
@@ -28,7 +28,7 @@ p{margin:0;color:#aeb5c6}
 </head>
 <body>
 <main id="app"></main>
-<div class="fly-track"><canvas id="flying" aria-label="Saatana! Perkele!"></canvas><div id="flying-label" class="flying-motion" aria-label="Animated text"></div></div>
+<div class="fly-track"><canvas id="flying" aria-label="Saatana! Perkele!"></canvas><div id="flying-label" aria-label="Animated text"></div></div>
 <div id="status" role="status">Initializing WebAssembly and WebGPU…</div>
 </body>
 </html>
