@@ -1,5 +1,6 @@
 export class SawWaveSystem {
-  constructor(){
+  constructor(master=null){
+    this.master=master;
     this.context=null;this.oscillator=null;this.gain=null;
     this.outputGain=Math.pow(10,-3/20);this.frequency=440;this.held=false;this.generation=0;this.analyser=null;
     this.voices=new Map();
@@ -17,7 +18,8 @@ export class SawWaveSystem {
       this.analyser=this.context.createAnalyser();
       this.analyser.fftSize=4096;this.analyser.minDecibels=-60;
       this.analyser.maxDecibels=0;this.analyser.smoothingTimeConstant=.65;
-      this.analyser.connect(this.context.destination);
+      if(this.master)this.master.attach(this.context,this.analyser);
+      else this.analyser.connect(this.context.destination);
     }
     await this.context.resume();
   }
