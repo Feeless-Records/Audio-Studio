@@ -28,7 +28,7 @@ class AudioStudioApp {
   async start(){
     this.browser.start();
     this.theme.apply("dark");
-    const controls=this.layout.renderWelcome("Hello World!","Welcome to Feeless Records Audio Studio.");
+    const controls=this.layout.renderWelcome("FEELESS DAW","Welcome to Feeless Records Audio Studio.");
     this.startButton=controls.startButton;
     this.sawButton=controls.sawButton;
     this.frequencySlider=controls.frequencySlider;
