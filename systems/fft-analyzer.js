@@ -11,7 +11,7 @@ export class FFTAnalyzer {
   stop(){if(this.frame)cancelAnimationFrame(this.frame);this.frame=0;}
   tick(){this.sample();this.draw();this.frame=requestAnimationFrame(this.tick);}
   sample(){
-    const source=this.sources.find(s=>s.held)||this.sources.find(s=>s.playing);
+    const source=this.sources.find(s=>s.held||s.voices?.size>0)||this.sources.find(s=>s.playing);
     const analyser=source?.analyser;
     if(!analyser){this.levels.fill(-60);return;}
     const data=new Float32Array(analyser.frequencyBinCount);
