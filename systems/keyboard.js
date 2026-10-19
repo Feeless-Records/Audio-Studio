@@ -11,8 +11,8 @@ export class KeyboardSystem {
     ["KeyJ",58],["KeyM",59],["Comma",60],["KeyL",61],
     ["Period",62],["Semicolon",63],["Slash",64]
   ]);
-  constructor(synth,{onError=console.error}={}){
-    this.synth=synth;this.onError=onError;this.pressed=new Set();this.tuningReference=440;
+  constructor(synth,{onError=console.error,onNotesChanged=()=>{}}={}){
+    this.synth=synth;this.onError=onError;this.onNotesChanged=onNotesChanged;this.pressed=new Set();this.tuningReference=440;
     this.keyDown=this.keyDown.bind(this);this.keyUp=this.keyUp.bind(this);
     this.releaseAll=this.releaseAll.bind(this);this.onVisibility=this.onVisibility.bind(this);
   }
@@ -31,15 +31,18 @@ export class KeyboardSystem {
     event.preventDefault();
     if(this.pressed.has(event.code))return;
     this.pressed.add(event.code);
+    this.notifyNotes();
     this.synth.noteOn(event.code,FrequencySystem.midiToHz(note)*this.tuningReference/440,note).catch(this.onError);
   }
   keyUp(event){
     if(!this.pressed.has(event.code))return;
     event.preventDefault();this.pressed.delete(event.code);
     this.synth.noteOff(event.code);
+    this.notifyNotes();
   }
   onVisibility(){if(document.hidden)this.releaseAll();}
-  releaseAll(){this.pressed.clear();this.synth.releaseAllNotes();}
+  releaseAll(){this.pressed.clear();this.synth.releaseAllNotes();this.notifyNotes();}
+  notifyNotes(){this.onNotesChanged([...this.pressed].map(code=>KeyboardSystem.KEY_NOTES.get(code)));}
   stop(){
     this.releaseAll();
     window.removeEventListener("keydown",this.keyDown);
