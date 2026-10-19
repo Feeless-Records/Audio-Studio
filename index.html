@@ -1,30 +1,22 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Audio Studio | Vector Text Lab</title>
-  <style>
-    * { box-sizing: border-box; }
-    body { margin: 0; min-height: 100vh; overflow: hidden; background: #10121a; color: white; font-family: system-ui, sans-serif; }
-    #stage { position: fixed; inset: 0; width: 100%; height: 100%; pointer-events: none; }
-    main { position: relative; display: grid; place-items: center; min-height: 100vh; text-align: center; pointer-events: none; }
-    h1 { font-size: clamp(2rem, 6vw, 4rem); margin: 0; }
-    .subtitle { color: #aeb5c6; }
-    .panel { position: fixed; z-index: 2; left: 16px; bottom: 16px; right: 16px; max-width: 550px; background: #1d2333e8; border: 1px solid #4c5365; border-radius: 12px; padding: 14px; }
-    label { display: block; margin-bottom: 8px; font-size: 13px; color: #cbd5e1; }
-    input { width: 100%; padding: 10px 12px; color: white; background: #111827; border: 1px solid #64748b; border-radius: 6px; font-size: 16px; }
-    #status { font-size: 12px; color: #aeb5c6; margin: 8px 0 0; }
-  </style>
-  <script src="app.js" defer></script>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Audio Studio | GPU Vector Text</title>
+<style>
+html,body{margin:0;min-height:100%;background:#10121a;color:#eef1f8;font:16px system-ui,sans-serif}
+body{display:flex;flex-direction:column}
+header{padding:16px 22px;display:flex;align-items:center;flex-wrap:wrap;gap:12px;background:#191d29}
+header label{font-weight:700}
+input{flex:1;min-width:180px;max-width:620px;padding:10px;border:1px solid #434b61;border-radius:7px;background:#0e1220;color:white;font:inherit}
+#status{font-size:13px;color:#afbed3}
+#stage{display:block;flex:1;width:100%;height:70vh;min-height:320px}
+footer{padding:12px 22px;color:#aeb5c6;font-size:13px}
+</style>
+<script src="app.js" defer></script>
 </head>
 <body>
-  <canvas id="stage" aria-label="Animated vector typography"></canvas>
-  <main id="app"></main>
-  <section class="panel">
-    <label for="terminal">Terminal / text output → vector glyphs → GPU</label>
-    <input id="terminal" value="Saatana! Perkele!" maxlength="80" spellcheck="false" aria-label="Animated text">
-    <p id="status" role="status">Initializing renderer…</p>
-  </section>
-</body>
-</html>
+<header><label for="message">Vector text</label><input id="message" value="Saatana! Perkele!" maxlength="100" aria-label="Animated text"><span id="status">Starting…</span></header>
+<canvas id="stage" aria-label="Animated WebGPU vector text"></canvas>
+<footer>Text input → WebAssembly layout → vector rectangles → WebGPU triangles. SVG fallback when WebGPU is unavailable. Basic ASCII 5×7 font.</footer>
+</body></html>
