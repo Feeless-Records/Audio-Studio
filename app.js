@@ -16,8 +16,8 @@ class AudioStudioApp {
   }
   async start(){
     this.theme.apply("dark");
-    const button=this.layout.renderWelcome("Hello World!","Welcome to Feeless Records Audio Studio.");
-    button.addEventListener("click",()=>this.playSound(button));
+    this.startButton=this.layout.renderWelcome("Hello World!","Welcome to Feeless Records Audio Studio.");
+    this.startButton.addEventListener("click",()=>this.playSound(this.startButton));
     this.label.textContent=this.message;
     this.animation.start();
     try{
