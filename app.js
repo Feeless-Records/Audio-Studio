@@ -9,6 +9,8 @@ app.append(title, subtitle);
 const canvas = document.querySelector("#flying");
 const status = document.querySelector("#status");
 const TEXT = "Saatana! Perkele!";
+// Visible CSS-animated label remains available if WASM or WebGPU fails.
+document.querySelector("#flying-label").textContent = TEXT;
 const GLYPHS = {
 " ":["00000","00000","00000","00000","00000","00000","00000"],
 "!":["00100","00100","00100","00100","00100","00000","00100"],
