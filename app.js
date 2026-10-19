@@ -1,10 +1,14 @@
 "use strict";
-const canvas = document.getElementById("stage");
-const input = document.getElementById("message");
-const status = document.getElementById("status");
-const encoder = new TextEncoder();
-// Public-domain-style 5×7 bitmap patterns converted into geometric rectangles, not a texture.
-// Each "on" cell becomes two GPU triangles: real vector geometry.
+const app = document.querySelector("#app");
+const title = document.createElement("h1");
+title.textContent = "Hello World!";
+const subtitle = document.createElement("p");
+subtitle.textContent = "Welcome to Feeless Records Audio Studio.";
+app.append(title, subtitle);
+
+const canvas = document.querySelector("#flying");
+const status = document.querySelector("#status");
+const TEXT = "Saatana! Perkele!";
 const GLYPHS = {
 " ":["00000","00000","00000","00000","00000","00000","00000"],
 "!":["00100","00100","00100","00100","00100","00000","00100"],
@@ -48,144 +52,102 @@ const GLYPHS = {
 "8":["01110","10001","10001","01110","10001","10001","01110"],
 "9":["01110","10001","10001","01111","00001","00001","01110"]
 };
-let wasm, device, context, pipeline, vertexBuffer, count=0, fallbackSvg=null;
-let extentX=0, extentY=7, offset=0, direction=1, last=0;
-const SPEED=160;
-async function initWasm() {
-  const response=await fetch("./text-layout.wasm");
-  if(!response.ok) throw new Error("WASM download failed: "+response.status);
-  const bytes=await response.arrayBuffer();
-  wasm=(await WebAssembly.instantiate(bytes)).instance.exports;
+
+async function loadLayout() {
+  const response = await fetch("./text-layout.wasm");
+  if (!response.ok) throw new Error("Could not load WebAssembly: " + response.status);
+  const {instance} = await WebAssembly.instantiate(await response.arrayBuffer());
+  return instance.exports;
 }
-function layout(text) {
-  const bytes=encoder.encode(text.replace(/[^\x20-\x7e]/g,"?")).slice(0,100);
-  const view=new Uint8Array(wasm.memory.buffer);
-  view.set(bytes,1024);
-  const n=wasm.layout_text(1024,bytes.length,4096,100);
-  const out=new Int32Array(wasm.memory.buffer,4096,n*3);
-  return Array.from({length:n},(_,i)=>({char:String.fromCharCode(out[i*3]),x:out[i*3+1],y:out[i*3+2]}));
-}
-function shapes(text){
-  const glyphs=layout(text), rectangles=[];
-  for(const g of glyphs){
-    const rows=GLYPHS[g.char]||GLYPHS["?"];
-    for(let y=0;y<7;y++)for(let x=0;x<5;x++)if(rows[y][x]==="1") rectangles.push([g.x+x,g.y+y,0.88,0.88]);
+function makeRectangles(wasm, message) {
+  const ascii = new TextEncoder().encode(message.toUpperCase());
+  new Uint8Array(wasm.memory.buffer).set(ascii, 1024);
+  const count = wasm.layout_text(1024, ascii.length, 4096, 100);
+  const positions = new Int32Array(wasm.memory.buffer, 4096, count * 3);
+  const vertices = [];
+  for (let i = 0; i < count; i++) {
+    const glyph = GLYPHS[String.fromCharCode(positions[i * 3])] || GLYPHS["?"];
+    const gx = positions[i * 3 + 1], gy = positions[i * 3 + 2];
+    for (let row = 0; row < 7; row++) for (let col = 0; col < 5; col++) {
+      if (glyph[row][col] !== "1") continue;
+      const x = gx + col, y = gy + row, r = 0.88;
+      vertices.push(x,y, x+r,y, x,y+r, x+r,y, x+r,y+r, x,y+r);
+    }
   }
-  extentX=Math.max(6,glyphs.length*6); extentY=7;
-  return rectangles;
+  return {vertices:new Float32Array(vertices),width:Math.max(6,count*6)};
 }
-function geometry(rects) {
-  const result=new Float32Array(rects.length*12);
-  let o=0;
-  for(const [x,y,w,h] of rects){
-    for(const v of [x,y,x+w,y,x,y+h,x+w,y,x+w,y+h,x,y+h])result[o++]=v;
+function svgFallback(data) {
+  canvas.style.display = "none";
+  const svg = document.createElementNS("http://www.w3.org/2000/svg","svg");
+  svg.setAttribute("viewBox", "0 0 " + data.width + " 7");
+  svg.setAttribute("aria-label", TEXT);
+  svg.style.cssText = canvas.style.cssText + ";position:absolute;left:0;top:0;width:min(540px,75vw);height:100px;animation:fly 5s ease-in-out infinite alternate";
+  const path = document.createElementNS("http://www.w3.org/2000/svg","path");
+  let commands = "";
+  for(let i=0;i<data.vertices.length;i+=12) {
+    const x=data.vertices[i], y=data.vertices[i+1];
+    commands += `M${x} ${y}h0.88v0.88h-0.88z`;
   }
-  return result;
+  path.setAttribute("d",commands);path.setAttribute("fill","#ffb542");
+  svg.append(path);canvas.after(svg);
 }
-async function initGpu() {
-  if(!navigator.gpu) throw new Error("WebGPU not available");
+async function renderGpu(data) {
+  if (!navigator.gpu) throw new Error("WebGPU unsupported");
   const adapter=await navigator.gpu.requestAdapter();
-  if(!adapter) throw new Error("No WebGPU adapter");
-  device=await adapter.requestDevice();
-  context=canvas.getContext("webgpu");
-  if(!context) throw new Error("WebGPU canvas unavailable");
+  if (!adapter) throw new Error("WebGPU adapter unavailable");
+  const device=await adapter.requestDevice();
+  const context=canvas.getContext("webgpu");
+  if (!context) throw new Error("WebGPU canvas unavailable");
+  const dpr=Math.min(devicePixelRatio||1,2);
+  canvas.width=Math.round(canvas.clientWidth*dpr);
+  canvas.height=Math.round(canvas.clientHeight*dpr);
   const format=navigator.gpu.getPreferredCanvasFormat();
   context.configure({device,format,alphaMode:"opaque"});
-  const shader=device.createShaderModule({code:`
-struct Params { values: vec4f }
-@group(0) @binding(0) var<uniform> params: Params;
-struct VertexOut { @builtin(position) position: vec4f }
-@vertex fn vs(@location(0) point: vec2f) -> VertexOut {
- let size=params.values.xy;
- let advance=params.values.z;
- let shift=params.values.w;
- let scale=min((size.x-24.0)/max(advance,1.0),(size.y-24.0)/7.0);
- let pix=vec2f(12.0+shift+point.x*scale,(size.y-7.0*scale)/2.0+point.y*scale);
- var out: VertexOut;
- out.position=vec4f(pix.x/size.x*2.0-1.0,1.0-pix.y/size.y*2.0,0.0,1.0);
- return out;
+  const code=`
+struct Uniforms { dimensions: vec2f, textWidth: f32, padding: f32 }
+@group(0) @binding(0) var<uniform> u: Uniforms;
+@vertex fn vertex(@location(0) p: vec2f) -> @builtin(position) vec4f {
+ let scale=min((u.dimensions.x-16.0)/u.textWidth,(u.dimensions.y-16.0)/7.0);
+ let origin=vec2f((u.dimensions.x-u.textWidth*scale)*0.5,(u.dimensions.y-7.0*scale)*0.5);
+ let pixel=origin+p*scale;
+ return vec4f(pixel.x/u.dimensions.x*2.0-1.0,1.0-pixel.y/u.dimensions.y*2.0,0.0,1.0);
 }
-@fragment fn fs() -> @location(0) vec4f { return vec4f(1.0,0.71,0.26,1.0); }
-`});
-  pipeline=device.createRenderPipeline({
-    layout:"auto",vertex:{module:shader,entryPoint:"vs",buffers:[{arrayStride:8,attributes:[{shaderLocation:0,offset:0,format:"float32x2"}]}]},
-    fragment:{module:shader,entryPoint:"fs",targets:[{format}]},primitive:{topology:"triangle-list"}
+@fragment fn fragment() -> @location(0) vec4f {return vec4f(1.0,0.71,0.26,1.0);}
+`;
+  const shader=device.createShaderModule({code});
+  const pipeline=device.createRenderPipeline({layout:"auto",
+    vertex:{module:shader,entryPoint:"vertex",buffers:[{arrayStride:8,attributes:[{shaderLocation:0,offset:0,format:"float32x2"}]}]},
+    fragment:{module:shader,entryPoint:"fragment",targets:[{format}]},
+    primitive:{topology:"triangle-list"}
   });
+  const vertex=device.createBuffer({size:Math.max(data.vertices.byteLength,4),usage:GPUBufferUsage.VERTEX|GPUBufferUsage.COPY_DST});
+  device.queue.writeBuffer(vertex,0,data.vertices);
   const uniform=device.createBuffer({size:16,usage:GPUBufferUsage.UNIFORM|GPUBufferUsage.COPY_DST});
+  device.queue.writeBuffer(uniform,0,new Float32Array([canvas.width,canvas.height,data.width,0]));
   const bind=device.createBindGroup({layout:pipeline.getBindGroupLayout(0),entries:[{binding:0,resource:{buffer:uniform}}]});
-  return {uniform,bind};
+  const encoder=device.createCommandEncoder();
+  const pass=encoder.beginRenderPass({colorAttachments:[{view:context.getCurrentTexture().createView(),
+    clearValue:{r:0.063,g:0.071,b:0.102,a:1},loadOp:"clear",storeOp:"store"}]});
+  pass.setPipeline(pipeline);pass.setBindGroup(0,bind);pass.setVertexBuffer(0,vertex);
+  pass.draw(data.vertices.length/2);pass.end();
+  device.queue.submit([encoder.finish()]);
+  // Rebuild on resize to preserve crisp vector edges.
+  return device;
 }
-function svgFallback(rects){
-  canvas.style.display="none";
-  fallbackSvg=document.createElementNS("http://www.w3.org/2000/svg","svg");
-  fallbackSvg.setAttribute("viewBox",`0 0 ${extentX} 7`);
-  fallbackSvg.setAttribute("preserveAspectRatio","xMidYMid meet");
-  fallbackSvg.style.cssText="width:100%;height:70vh;min-height:320px;overflow:visible;display:block";
-  const group=document.createElementNS("http://www.w3.org/2000/svg","g");
-  group.setAttribute("fill","#ffb542");
-  for(const [x,y,w,h] of rects){
-    const r=document.createElementNS("http://www.w3.org/2000/svg","rect");
-    for(const [k,v] of Object.entries({x,y,width:w,height:h}))r.setAttribute(k,v);
-    group.append(r);
-  }
-  fallbackSvg.append(group); canvas.after(fallbackSvg);
-  return group;
-}
-function resize(){
-  const dpr=Math.min(window.devicePixelRatio||1,2);
-  canvas.width=Math.max(1,Math.floor(canvas.clientWidth*dpr));
-  canvas.height=Math.max(1,Math.floor(canvas.clientHeight*dpr));
-}
-async function main(){
-  await initWasm();
-  let rects=shapes(input.value), gpu=null, svgGroup=null;
-  try{gpu=await initGpu();status.textContent="WebAssembly + WebGPU vector triangles";}
-  catch(err){status.textContent="WebAssembly + SVG fallback ("+err.message+")";svgGroup=svgFallback(rects);}
-  function update(){
-    rects=shapes(input.value);
-    offset=0;direction=1;
-    if(svgGroup){
-      svgGroup.replaceChildren();
-      for(const [x,y,w,h] of rects){
-        const r=document.createElementNS("http://www.w3.org/2000/svg","rect");
-        for(const [k,v] of Object.entries({x,y,width:w,height:h}))r.setAttribute(k,v);
-        svgGroup.append(r);
-      }
-    }else{
-      const vertices=geometry(rects);count=vertices.length/2;
-      vertexBuffer?.destroy();
-      vertexBuffer=device.createBuffer({size:Math.max(4,vertices.byteLength),usage:GPUBufferUsage.VERTEX|GPUBufferUsage.COPY_DST});
-      if(vertices.byteLength)device.queue.writeBuffer(vertexBuffer,0,vertices);
+(async () => {
+  try {
+    const wasm=await loadLayout();
+    const geometry=makeRectangles(wasm,TEXT);
+    try {
+      await renderGpu(geometry);
+      status.textContent="WebAssembly ✓  WebGPU ✓  Vector geometry ✓  CSS animation ✓";
+    } catch (error) {
+      svgFallback(geometry);
+      status.textContent="WebAssembly ✓  SVG vector fallback ✓  WebGPU unavailable";
+      console.warn(error);
     }
+  } catch(error) {
+    status.textContent="WebAssembly error: " + error.message;
+    console.error(error);
   }
-  input.addEventListener("input",update);
-  update();
-  function render(time){
-    const dt=last?Math.min((time-last)/1000,.05):0;last=time;
-    if(gpu){
-      resize();
-      const scale=Math.min((canvas.width-24)/Math.max(extentX,1),(canvas.height-24)/7);
-      const maxOffset=Math.max(0,canvas.width-24-extentX*scale);
-      if(!matchMedia("(prefers-reduced-motion: reduce)").matches){
-        offset+=direction*SPEED*(window.devicePixelRatio||1)*dt;
-        if(offset>maxOffset){offset=maxOffset;direction=-1;}
-        if(offset<0){offset=0;direction=1;}
-      }
-      device.queue.writeBuffer(gpu.uniform,0,new Float32Array([canvas.width,canvas.height,extentX,offset]));
-      const pass=device.createCommandEncoder();
-      const rp=pass.beginRenderPass({colorAttachments:[{view:context.getCurrentTexture().createView(),loadOp:"clear",storeOp:"store",clearValue:{r:.063,g:.071,b:.102,a:1}}]});
-      rp.setPipeline(pipeline);rp.setBindGroup(0,gpu.bind);rp.setVertexBuffer(0,vertexBuffer);rp.draw(count);rp.end();
-      device.queue.submit([pass.finish()]);
-    }else if(svgGroup && !matchMedia("(prefers-reduced-motion: reduce)").matches){
-      // SVG uses the same vector rectangles when WebGPU is unavailable.
-      const maxOffset=2;
-      offset+=direction*dt*.35;
-      if(offset>maxOffset){offset=maxOffset;direction=-1;}
-      if(offset<0){offset=0;direction=1;}
-      svgGroup.setAttribute("transform",`translate(${offset},0)`);
-    }
-    requestAnimationFrame(render);
-  }
-  requestAnimationFrame(render);
-}
-main().catch(err=>{status.textContent="Startup error: "+err.message;console.error(err);});
+})();
