@@ -7,7 +7,7 @@ const types = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; ch
 const server = http.createServer((req, res) => {
   const pathname = new URL(req.url, "http://localhost").pathname;
   const file = pathname === "/" ? "index.html" : pathname.slice(1);
-  if (!["index.html", "app.js", "text-layout.wasm", "Perkele!.wav", "systems/audio.js", "systems/saw-wave.js", "systems/fft-analyzer.js", "systems/animation.js", "systems/layout.js", "systems/theme.js", "systems/text-processor.js", "systems/text-renderer.js", "systems/text-system.js"].includes(file)) {
+  if (!["index.html", "app.js", "text-layout.wasm", "Perkele!.wav", "systems/audio.js", "systems/saw-wave.js", "systems/fft-analyzer.js", "systems/animation.js", "systems/layout.js", "systems/theme.js", "systems/text-processor.js", "systems/text-renderer.js", "systems/text-system.js", "systems/event.js", "systems/document.js", "systems/project.js", "systems/timeline.js", "systems/sequencing.js", "systems/parametric.js", "systems/frequency.js", "systems/velocity.js", "systems/sound.js", "systems/sampling.js", "systems/studio-core.js"].includes(file)) {
     res.writeHead(404); res.end("Not found"); return;
   }
   fs.readFile(path.join(root, file), (err, contents) => {
