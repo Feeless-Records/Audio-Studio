@@ -40,12 +40,21 @@ export class LayoutSystem {
     const pointer=document.createElement("span");pointer.className="knob-pointer";knob.append(pointer);
     const volumeValue=document.createElement("output");volumeValue.id="masterVolumeValue";
     volumeGroup.append(volumeLabel,knob,volumeValue);
+    const midiPanel=document.createElement("section");midiPanel.id="midiDevices";
+    const midiHeading=document.createElement("h2");midiHeading.textContent="MIDI Devices";
+    const midiStatus=document.createElement("div");midiStatus.id="midiDeviceStatus";midiStatus.textContent="Checking MIDI access…";
+    const midiGrid=document.createElement("div");midiGrid.className="midi-device-grid";
+    const createColumn=(title,id)=>{const column=document.createElement("div");const name=document.createElement("h3");name.textContent=title;const list=document.createElement("ul");list.id=id;column.append(name,list);return {column,list};};
+    const midiInputs=createColumn("MIDI IN","midiInputs");
+    const midiOutputs=createColumn("MIDI OUT","midiOutputs");
+    midiGrid.append(midiInputs.column,midiOutputs.column);
+    midiPanel.append(midiHeading,midiStatus,midiGrid);
     const p=document.createElement("p");p.textContent=subtitle;
     const hint=document.createElement("p");
     hint.className="keyboard-hint";
     hint.textContent="Keyboard: Q 2 W 3 E ... [ = ] (C4–G5), Z S X D C ... / (C3–E4). Hold keys to play notes.";
-    group.append(h,volumeGroup,button,saw,label,slider,fftCanvas,chordField,quintButton,hint,p);
+    group.append(h,volumeGroup,button,saw,label,slider,fftCanvas,chordField,midiPanel,quintButton,hint,p);
     this.root.replaceChildren(group);
-    return {startButton:button,simpleSynthButton:saw,frequencySlider:slider,frequencyValue:value,fftCanvas,chordField,quintButton,masterKnob:knob,masterValue:volumeValue};
+    return {startButton:button,simpleSynthButton:saw,frequencySlider:slider,frequencyValue:value,fftCanvas,chordField,quintButton,masterKnob:knob,masterValue:volumeValue,midiStatus,midiInputs:midiInputs.list,midiOutputs:midiOutputs.list};
   }
 }
