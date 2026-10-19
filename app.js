@@ -68,6 +68,11 @@ class AudioStudioApp {
     window.addEventListener("blur",release);
     document.addEventListener("visibilitychange",()=>{if(document.hidden)release();});
     this.frequencySlider.addEventListener("input",()=>this.updateFrequency());
+    this.frequencySlider.addEventListener("dblclick",()=>this.resetFrequency());
+    this.updateFrequency();
+  }
+  resetFrequency(){
+    this.frequencySlider.value=String(Math.round(1000*Math.log(440/20)/Math.log(1000)));
     this.updateFrequency();
   }
   updateFrequency(){
