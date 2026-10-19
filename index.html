@@ -47,12 +47,12 @@ border:3px solid #7c95b8;box-shadow:inset 0 3px 9px #0008,0 6px 16px #000a,0 0 1
 .knob-pointer{position:absolute;inset:9px;border-radius:50%;transform:rotate(var(--knob-angle,135deg))}
 .knob-pointer:after{content:"";position:absolute;top:0;left:calc(50% - 2px);width:4px;height:19px;border-radius:4px;background:#79ddff;box-shadow:0 0 8px #25bfff}
 #masterVolumeValue{font:700 15px system-ui;color:#ffda9b}
-#startButton,#sawButton,#quintButton{height:1cm;min-height:38px;width:100%;border:1px solid #f6c16c;border-radius:7px;background:#222a3b;color:#ffda9b;font:600 16px system-ui,sans-serif;cursor:pointer;transition:background .1s,color .1s,transform .1s,box-shadow .1s}
-#startButton:active,#startButton.is-playing,#sawButton:active,#sawButton.is-playing,#quintButton:active,#quintButton[aria-pressed="true"]{background:#ffb542;color:#131722;transform:translateY(2px);box-shadow:inset 0 3px 8px #0007}
-#startButton:focus-visible,#sawButton:focus-visible,#quintButton:focus-visible{outline:3px solid #fff;outline-offset:3px}
+#startButton,#simpleSynthButton,#quintButton{height:1cm;min-height:38px;width:100%;border:1px solid #f6c16c;border-radius:7px;background:#222a3b;color:#ffda9b;font:600 16px system-ui,sans-serif;cursor:pointer;transition:background .1s,color .1s,transform .1s,box-shadow .1s}
+#startButton:active,#startButton.is-playing,#simpleSynthButton:active,#simpleSynthButton.is-playing,#quintButton:active,#quintButton[aria-pressed="true"]{background:#ffb542;color:#131722;transform:translateY(2px);box-shadow:inset 0 3px 8px #0007}
+#startButton:focus-visible,#simpleSynthButton:focus-visible,#quintButton:focus-visible{outline:3px solid #fff;outline-offset:3px}
 .frequency-label{font-size:13px;color:#aeb5c6;display:flex;justify-content:space-between;align-items:center}
 #frequencySlider{width:100%;accent-color:#ffb542;cursor:pointer;touch-action:pan-y}
-#sawButton{touch-action:none}
+#simpleSynthButton{touch-action:none}
 #fftAnalyzer{display:block;width:100%;height:4cm;min-height:130px;border:1px solid #424c64;border-radius:5px;background:#151b29}
 #chordDisplay{width:100%;min-height:39px;padding:9px;border:1px solid #424c64;border-radius:6px;background:#151b29;color:#ffda9b;font:500 13px system-ui,sans-serif;text-align:center;overflow-wrap:anywhere}
 #quintCircle{position:fixed;top:12px;left:12px;width:min(440px,45vw);max-height:calc(100dvh - 24px);object-fit:contain;z-index:100;background:#000;border:1px solid #5b6375;border-radius:8px;box-shadow:0 10px 40px #0009;pointer-events:none}
@@ -73,12 +73,12 @@ border:3px solid #7c95b8;box-shadow:inset 0 3px 9px #0008,0 6px 16px #000a,0 0 1
 /* Device families: retain usable controls in small and rotated viewports. */
 .welcome-group p{overflow-wrap:anywhere}
 #chordDisplay{box-sizing:border-box}
-html[data-device="mobile"] #startButton,html[data-device="mobile"] #sawButton,html[data-device="mobile"] #quintButton{min-height:44px}
+html[data-device="mobile"] #startButton,html[data-device="mobile"] #simpleSynthButton,html[data-device="mobile"] #quintButton{min-height:44px}
 html[data-device="mobile"] .keyboard-hint{font-size:12px}
 html[data-orientation="landscape"][data-device="mobile"] main{padding-top:16px}
 .prototype-footer{padding:0 20px 24px;text-align:center;font-size:12px}.prototype-footer a{color:#aebf9d;text-underline-offset:4px}
 </style>
-<script type="module" src="app.js?v=transport-2"></script>
+<script type="module" src="app.js"></script>
 </head>
 <body>
 <main id="app"></main>

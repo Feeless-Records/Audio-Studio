@@ -7,7 +7,7 @@ export class LayoutSystem {
     button.type="button";button.id="startButton";button.textContent="Play Sample";
     button.setAttribute("aria-pressed","false");
     const saw=document.createElement("button");
-    saw.type="button";saw.id="sawButton";saw.textContent="Play Saw Wave";
+    saw.type="button";saw.id="simpleSynthButton";saw.textContent="Play SimpleSynth";
     saw.setAttribute("aria-pressed","false");
     const label=document.createElement("label");
     label.htmlFor="frequencySlider";label.className="frequency-label";
@@ -46,6 +46,6 @@ export class LayoutSystem {
     hint.textContent="Keyboard: Q 2 W 3 E ... [ = ] (C4–G5), Z S X D C ... / (C3–E4). Hold keys to play notes.";
     group.append(h,volumeGroup,button,saw,label,slider,fftCanvas,chordField,quintButton,hint,p);
     this.root.replaceChildren(group);
-    return {startButton:button,sawButton:saw,frequencySlider:slider,frequencyValue:value,fftCanvas,chordField,quintButton,masterKnob:knob,masterValue:volumeValue};
+    return {startButton:button,simpleSynthButton:saw,frequencySlider:slider,frequencyValue:value,fftCanvas,chordField,quintButton,masterKnob:knob,masterValue:volumeValue};
   }
 }

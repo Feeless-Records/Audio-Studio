@@ -4,9 +4,9 @@ import {LayoutSystem} from "./systems/layout.js";
 import {ThemeSystem} from "./systems/theme.js";
 import {TextSystem} from "./systems/text-system.js";
 import {AudioSystem} from "./systems/audio.js";
-import {SawWaveSystem} from "./systems/saw-wave.js";
+import {SimpleSynth} from "./systems/simple-synth.js";
 import {FFTAnalyzer} from "./systems/fft-analyzer.js";
-import {StudioCore} from "./systems/studio-core.js?v=transport-2";
+import {StudioCore} from "./systems/studio-core.js";
 import {KeyboardSystem} from "./systems/keyboard.js";
 import {ChordSystem} from "./systems/chord.js";
 import {MIDISystem} from "./systems/midi.js";
@@ -17,9 +17,8 @@ class AudioStudioApp {
     this.core=new StudioCore({bpm:120});
     this.theme=new ThemeSystem();
     this.master=new MasterVolumeSystem(100);
-    this.core.transportController.engine.master=this.master;
-    this.audio=new AudioSystem("./Perkele!.wav",this.master,this.core.transportController.engine);
-    this.saw=new SawWaveSystem(this.master,this.core.transportController.engine);
+    this.audio=new AudioSystem("./Perkele!.wav",this.master);
+    this.saw=new SimpleSynth(this.master);
     this.chords=new ChordSystem();
     this.keyboard=new KeyboardSystem(this.saw,{onError:error=>{this.status.textContent="Keyboard audio error: "+error.message;},onNotesChanged:notes=>{this.keyboardNotes=notes;this.updateChord();}});
     this.midiNotes=[];
@@ -38,7 +37,7 @@ class AudioStudioApp {
     const controls=this.layout.renderWelcome("FEELESS DAW","Welcome to Feeless Records Audio Studio.");
     this.masterKnob=new MasterVolumeKnob(controls.masterKnob,controls.masterValue,this.master).start();
     this.startButton=controls.startButton;
-    this.sawButton=controls.sawButton;
+    this.simpleSynthButton=controls.simpleSynthButton;
     this.frequencySlider=controls.frequencySlider;
     this.frequencyValue=controls.frequencyValue;
     this.chordField=controls.chordField;
@@ -88,7 +87,7 @@ class AudioStudioApp {
     this.chordField.textContent="Аккорд: "+result.chord+" | "+result.notes;
   }
   configureSaw(){
-    const button=this.sawButton;
+    const button=this.simpleSynthButton;
     const release=()=>this.releaseSaw();
     button.addEventListener("pointerdown",event=>{
       if(event.button!==0||this.saw.held)return;
@@ -125,15 +124,15 @@ class AudioStudioApp {
     this.frequencyValue.textContent=frequency.toLocaleString("ru-RU")+" Hz";
   }
   async pressSaw(){
-    this.sawButton.classList.add("is-playing");
-    this.sawButton.setAttribute("aria-pressed","true");
+    this.simpleSynthButton.classList.add("is-playing");
+    this.simpleSynthButton.setAttribute("aria-pressed","true");
     try{await this.saw.press();}
     catch(error){this.status.textContent="Saw audio error: "+error.message;this.releaseSaw();}
   }
   releaseSaw(){
     this.saw.release();
-    this.sawButton.classList.remove("is-playing");
-    this.sawButton.setAttribute("aria-pressed","false");
+    this.simpleSynthButton.classList.remove("is-playing");
+    this.simpleSynthButton.setAttribute("aria-pressed","false");
   }
   async playSound(button){
     if(this.audio.playing)return;
@@ -148,7 +147,7 @@ class AudioStudioApp {
       button.disabled=false;
     }
   }
-  resume(){this.masterKnob?.start();this.browser.start();this.keyboard.start();this.midi.start();this.animation.start();this.fft?.start();}
-  stop(){this.core?.transportController.stop();this.masterKnob?.stop();this.audio.stop();this.browser.stop();this.keyboard.stop();this.midi.stop();this.releaseSaw();this.animation.stop();this.fft?.stop();}
+  resume(){this.browser.start();this.keyboard.start();this.midi.start();this.animation.start();this.fft?.start();}
+  stop(){this.masterKnob?.stop();this.audio.stop();this.browser.stop();this.keyboard.stop();this.midi.stop();this.releaseSaw();this.animation.stop();this.fft?.stop();}
 }
 new AudioStudioApp().start();
