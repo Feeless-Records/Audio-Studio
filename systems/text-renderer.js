@@ -16,7 +16,7 @@ export class TextRenderer {
   canvas.width=Math.round(canvas.clientWidth*dpr);
   canvas.height=Math.round(canvas.clientHeight*dpr);
   const format=navigator.gpu.getPreferredCanvasFormat();
-  context.configure({device,format,alphaMode:"opaque"});
+  context.configure({device,format,alphaMode:"premultiplied"});
   const code=`
 struct Uniforms { dimensions: vec2f, textWidth: f32, padding: f32 }
 @group(0) @binding(0) var<uniform> u: Uniforms;
@@ -41,7 +41,7 @@ struct Uniforms { dimensions: vec2f, textWidth: f32, padding: f32 }
   const bind=device.createBindGroup({layout:pipeline.getBindGroupLayout(0),entries:[{binding:0,resource:{buffer:uniform}}]});
   const encoder=device.createCommandEncoder();
   const pass=encoder.beginRenderPass({colorAttachments:[{view:context.getCurrentTexture().createView(),
-    clearValue:{r:0.063,g:0.071,b:0.102,a:1},loadOp:"clear",storeOp:"store"}]});
+    clearValue:{r:0,g:0,b:0,a:0},loadOp:"clear",storeOp:"store"}]});
   pass.setPipeline(pipeline);pass.setBindGroup(0,bind);pass.setVertexBuffer(0,vertex);
   pass.draw(data.vertices.length/2);pass.end();
   device.queue.submit([encoder.finish()]);
