@@ -33,6 +33,18 @@ p{margin:0;color:#aeb5c6}
 #flying-label[hidden]{display:none}
 #status{position:fixed;bottom:16px;left:20px;font-size:12px;color:#92a0b6}
 
+
+/* Device families: retain usable controls in small and rotated viewports. */
+body{overflow:auto}
+main{height:auto;min-height:100vh;min-height:100dvh;padding:24px 16px 72px}
+.welcome-group{width:min(var(--device-max-width,960px),calc(100vw - 32px));gap:var(--device-gap,12px);min-width:0}
+.welcome-group h1{white-space:normal}
+.welcome-group p{overflow-wrap:anywhere}
+#chordDisplay{box-sizing:border-box}
+#status{position:static;margin:0 16px 16px;overflow-wrap:anywhere}
+html[data-device="mobile"] #startButton,html[data-device="mobile"] #sawButton{min-height:44px}
+html[data-device="mobile"] .keyboard-hint{font-size:12px}
+html[data-orientation="landscape"][data-device="mobile"] main{padding-top:16px}
 </style>
 <script type="module" src="app.js"></script>
 </head>

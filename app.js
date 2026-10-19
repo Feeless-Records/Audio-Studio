@@ -1,3 +1,4 @@
+import {BrowserApp} from "./browser-app.js";
 import {AnimationSystem} from "./systems/animation.js";
 import {LayoutSystem} from "./systems/layout.js";
 import {ThemeSystem} from "./systems/theme.js";
@@ -10,6 +11,7 @@ import {KeyboardSystem} from "./systems/keyboard.js";
 import {ChordSystem} from "./systems/chord.js";
 class AudioStudioApp {
   constructor(){
+    this.browser=new BrowserApp();
     this.core=new StudioCore({bpm:120});
     this.theme=new ThemeSystem();
     this.audio=new AudioSystem();
@@ -24,6 +26,7 @@ class AudioStudioApp {
     this.message="Saatana! Perkele!";
   }
   async start(){
+    this.browser.start();
     this.theme.apply("dark");
     const controls=this.layout.renderWelcome("Hello World!","Welcome to Feeless Records Audio Studio.");
     this.startButton=controls.startButton;
@@ -115,6 +118,6 @@ class AudioStudioApp {
       button.disabled=false;
     }
   }
-  stop(){this.keyboard.stop();this.releaseSaw();this.animation.stop();this.fft?.stop();}
+  stop(){this.browser.stop();this.keyboard.stop();this.releaseSaw();this.animation.stop();this.fft?.stop();}
 }
 new AudioStudioApp().start();
