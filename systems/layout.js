@@ -15,8 +15,8 @@ export class LayoutSystem {
     const value=document.createElement("output");value.id="frequencyValue";value.textContent="440 Hz";
     label.append(value);
     const slider=document.createElement("input");
-    slider.type="range";slider.id="frequencySlider";slider.min="20";slider.max="20000";
-    slider.step="1";slider.value="440";slider.setAttribute("aria-label","Saw wave frequency in Hz");
+    slider.type="range";slider.id="frequencySlider";slider.min="0";slider.max="1000";
+    slider.step="1";slider.value=String(Math.round(1000*Math.log(440/20)/Math.log(1000)));slider.setAttribute("aria-label","Saw wave frequency in Hz");
     const p=document.createElement("p");p.textContent=subtitle;
     group.append(h,button,saw,label,slider,p);
     this.root.replaceChildren(group);
