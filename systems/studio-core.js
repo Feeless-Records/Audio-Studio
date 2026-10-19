@@ -1,4 +1,4 @@
-import {TransportController} from "./transport-controller.js?v=transport-2";
+import {TransportController} from "./transport-controller.js?v=transport-3";
 import {WorkflowSystem} from "./workflow.js";
 import {ProjectSystem} from "./project.js";
 import {DocumentSystem} from "./document.js";
@@ -7,8 +7,8 @@ import {SequencingSystem} from "./sequencing.js";
 import {ParametricSystem} from "./parametric.js";
 import {FrequencySystem} from "./frequency.js";
 import {VelocitySystem} from "./velocity.js";
-import {SoundSystem} from "./sound.js";
-import {SamplingSystem} from "./sampling.js";
+import {SoundSystem} from "./sound.js?v=transport-3";
+import {SamplingSystem} from "./sampling.js?v=transport-3";
 export class StudioCore {
   constructor({bpm=120}={}){
     this.project=new ProjectSystem({bpm});

@@ -1,6 +1,6 @@
 import {AudioEngineSystem} from "./audio-engine.js";
-import {AudioRenderingSystem,validateNotes} from "./audio-rendering.js";
-import {SoundSystem} from "./sound.js";
+import {AudioRenderingSystem,validateNotes} from "./audio-rendering.js?v=transport-3";
+import {SoundSystem} from "./sound.js?v=transport-3";
 import {number} from "./workflow-validation.js";
 export class TransportController{
  constructor(core,{engine=new AudioEngineSystem(),renderer=new AudioRenderingSystem(),setTimer=(fn,ms)=>globalThis.setInterval(fn,ms),clearTimer=id=>globalThis.clearInterval(id)}={}){

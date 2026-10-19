@@ -1,5 +1,5 @@
 import {BrowserApp} from "./browser-app.js";
-import {DesktopSystem} from "./systems/desktop-system.js?v=transport-2";
+import {DesktopSystem} from "./systems/desktop-system.js?v=transport-3";
 const browser=new BrowserApp();
 const desktop=new DesktopSystem(document.querySelector("#desktop"));
 browser.start();desktop.start();

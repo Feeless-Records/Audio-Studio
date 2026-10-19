@@ -1,5 +1,5 @@
 import {AudioProcessingSystem} from "./audio-processing.js";
-import {SoundSystem} from "./sound.js";
+import {SoundSystem} from "./sound.js?v=transport-3";
 import {number,integer} from "./workflow-validation.js";
 export function validateNotes(notes){
  if(!Array.isArray(notes))throw new TypeError("Notes array required");
