@@ -24,7 +24,12 @@ export class KeyboardSystem {
     document.addEventListener("visibilitychange",this.onVisibility);
     return this;
   }
-  isTyping(target){return target instanceof HTMLElement && (target.isContentEditable||["INPUT","TEXTAREA","SELECT"].includes(target.tagName));}
+  isTyping(target){
+    if(!(target instanceof HTMLElement))return false;
+    // Range controls must not suppress the musical keyboard after a click.
+    if(target instanceof HTMLInputElement && target.type==="range")return false;
+    return target.isContentEditable||["INPUT","TEXTAREA","SELECT"].includes(target.tagName);
+  }
   keyDown(event){
     const note=KeyboardSystem.KEY_NOTES.get(event.code);
     if(note===undefined||event.repeat||this.isTyping(event.target)||event.ctrlKey||event.altKey||event.metaKey)return;
