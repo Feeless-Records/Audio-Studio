@@ -10,6 +10,7 @@
       margin: 0;
       display: grid;
       place-items: center;
+      overflow: hidden;
       background: #10121a;
       color: #f7f7fb;
       font-family: system-ui, sans-serif;
@@ -17,6 +18,22 @@
     }
     h1 { font-size: clamp(2rem, 6vw, 4rem); margin-bottom: 0.5rem; }
     p { color: #aeb5c6; }
+    .flying-text {
+      position: fixed;
+      top: 20%;
+      left: 0;
+      z-index: 2;
+      white-space: nowrap;
+      font-size: clamp(1.4rem, 4vw, 3rem);
+      font-weight: 900;
+      color: #ffca54;
+      text-shadow: 0 0 12px #f97316, 0 0 25px #ea580c;
+      pointer-events: none;
+      will-change: transform;
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .flying-text { left: 50%; transform: translateX(-50%); }
+    }
   </style>
   <script src="app.js" defer></script>
 </head>
