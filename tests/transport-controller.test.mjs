@@ -63,3 +63,11 @@ test("WAV exporter writes stereo PCM headers, interleaves and clamps samples",as
  assert.equal(new TextDecoder().decode(new Uint8Array(data,0,4)),"RIFF");assert.equal(view.getUint16(22,true),2);assert.equal(view.getUint32(40,true),8);
  assert.equal(view.getInt16(44,true),32767);assert.equal(view.getInt16(48,true),-32768);assert.equal(view.getInt16(50,true),0);
 });
+
+test("browser timer callbacks retain the global receiver",async()=>{
+ const {core,engine}=setup(),oldSet=globalThis.setInterval,oldClear=globalThis.clearInterval;let cleared=false;
+ globalThis.setInterval=function(){assert.equal(this,globalThis);return 123;};
+ globalThis.clearInterval=function(id){assert.equal(this,globalThis);assert.equal(id,123);cleared=true;};
+ try{const controller=new TransportController(core,{engine});await controller.play();controller.pause();assert.equal(cleared,true);}
+ finally{globalThis.setInterval=oldSet;globalThis.clearInterval=oldClear;}
+});

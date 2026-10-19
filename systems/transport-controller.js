@@ -3,7 +3,7 @@ import {AudioRenderingSystem,validateNotes} from "./audio-rendering.js";
 import {SoundSystem} from "./sound.js";
 import {number} from "./workflow-validation.js";
 export class TransportController{
- constructor(core,{engine=new AudioEngineSystem(),renderer=new AudioRenderingSystem(),setTimer=setInterval,clearTimer=clearInterval}={}){
+ constructor(core,{engine=new AudioEngineSystem(),renderer=new AudioRenderingSystem(),setTimer=(fn,ms)=>globalThis.setInterval(fn,ms),clearTimer=id=>globalThis.clearInterval(id)}={}){
  this.core=core;this.clock=core.workflow.transport;this.engine=engine;this.renderer=renderer;this.setTimer=setTimer;this.clearTimer=clearTimer;
  this.sound=null;this.timer=null;this.length=4;this.loop=true;this.state="stopped";this.listeners=new Set();this.generation=0;this.rendering=false;this.scheduledUntil=0;this.includeHeld=true;this.error=null;
  }
@@ -19,7 +19,7 @@ export class TransportController{
  if(!this.loop&&this.clock.beat>=this.length)this.clock.seek(0,this.engine.context.currentTime);
  this.clock.play(this.engine.context.currentTime);this.state="playing";this.scheduledUntil=this.clock.position(this.engine.context.currentTime);this.includeHeld=true;
  this.pump();this.timer=this.setTimer(()=>{try{this.pump();}catch(error){this.pause();this.error=error.message;this.emit();}},25);
- }catch(error){if(token===this.generation){this.state="paused";this.error=error.message;this.emit();}throw error;}
+ }catch(error){if(token===this.generation){this.pause();this.error=error.message;this.emit();}throw error;}
  }
  pump(){
  if(this.state!=="playing")return;
