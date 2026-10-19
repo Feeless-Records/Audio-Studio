@@ -1,7 +1,8 @@
-// DOM layout primitives; GPU geometry layout lives in text-processor.js.
-export function createWelcome(root,title,subtitle){
- const heading=document.createElement("h1");heading.textContent=title;
- const description=document.createElement("p");description.textContent=subtitle;
- root.replaceChildren(heading,description);
- return {heading,description};
+export class LayoutSystem {
+  constructor(root){this.root=root;}
+  renderWelcome(title,subtitle){
+    const h=document.createElement("h1");h.textContent=title;
+    const p=document.createElement("p");p.textContent=subtitle;
+    this.root.replaceChildren(h,p);
+  }
 }
