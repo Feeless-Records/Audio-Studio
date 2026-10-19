@@ -41,3 +41,6 @@ Warp marker mapping does not stretch audio or implement proprietary warp algorit
 Clip loop flags are metadata; arrangement playback/loop expansion is not yet connected.
 No FLP/ALS/XRNS/MOD import, VST/AU hosting, recording, export, or collaboration engine is claimed.
 Next adjustments can address editors, audio scheduling, persistence and DSP in that order.
+
+## Transport integration update (2026-10-19)
+TransportController now binds the beat-clock model to shared real-time audio scheduling and offline synth-pattern rendering. See TRANSPORT-SYSTEM.md for supported controls and remaining arrangement/clip boundaries.

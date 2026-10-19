@@ -6,3 +6,5 @@ GitHub Pages publishes the root of main at https://feeless-records.github.io/Aud
 Current UI: sample playback, polyphonic saw keyboard, tuning, chord display, FFT and circle-of-fifths reference.
 See DEVICE-FAMILIES.md for responsive families and WORKFLOW-SYSTEMS.md for the new workflow classes and their implementation boundaries.
 Real-time collaboration and complete DAW editing are future work.
+
+Transport and audio engine: see TRANSPORT-SYSTEM.md. In Desktop mockup, toggle Channel Rack steps and open Transport for playback, processing controls and WAV export.

@@ -1,5 +1,5 @@
 export class AudioSystem {
-  constructor(url="./Perkele!.wav",master=null){this.master=master;this.url=url;this.playing=false;this.audio=new Audio();this.audio.preload="auto";this.audio.src=url;this.cancelPlayback=null;this.playGeneration=0;this.context=null;this.analyser=null;this.source=null;this.outputGain=Math.pow(10,-6/20);this.volumeNode=null;}
+  constructor(url="./Perkele!.wav",master=null,engine=null){this.engine=engine;this.master=master;this.url=url;this.playing=false;this.audio=new Audio();this.audio.preload="auto";this.audio.src=url;this.cancelPlayback=null;this.playGeneration=0;this.engine?.register(this);this.context=null;this.analyser=null;this.source=null;this.outputGain=Math.pow(10,-6/20);this.volumeNode=null;}
   async play(){
     if(this.playing)return;
     this.playing=true;const generation=++this.playGeneration;
@@ -23,7 +23,7 @@ export class AudioSystem {
   connectAnalyzer(){
     if(this.analyser)return;
     const Context=window.AudioContext||window.webkitAudioContext;
-    this.context=new Context();
+    this.context=this.engine?this.engine.getContext():new Context();
     this.source=this.context.createMediaElementSource(this.audio);
     this.analyser=this.context.createAnalyser();
     this.analyser.fftSize=4096;this.analyser.minDecibels=-60;
@@ -32,7 +32,8 @@ export class AudioSystem {
     this.volumeNode.gain.value=this.outputGain;
     this.source.connect(this.volumeNode);
     this.volumeNode.connect(this.analyser);
-    if(this.master)this.master.attach(this.context,this.analyser);
+    if(this.engine)this.analyser.connect(this.engine.input);
+    else if(this.master)this.master.attach(this.context,this.analyser);
     else this.analyser.connect(this.context.destination);
   }
   stop(){++this.playGeneration;this.cancelPlayback?.();this.audio.pause();this.audio.currentTime=0;this.playing=false;}

@@ -1,3 +1,4 @@
+import {TransportPanel} from "./transport-panel.js";
 import {WindowSystem} from "./window-system.js";
 import {StudioCore} from "./studio-core.js";
 function node(tag,className,text){const el=document.createElement(tag);if(className)el.className=className;if(text!==undefined)el.textContent=text;return el;}
@@ -9,27 +10,31 @@ export class DesktopSystem{
  const brand=node("div","desktop-brand","F / R");const identity=node("div","desktop-identity");identity.append(node("strong","","Audio Studio"),node("span","","DESKTOP LAB / 01"));
  const back=node("a","back-link","← Front page");back.href="./index.html";top.append(brand,identity,back);
  const toolbar=node("nav","desktop-tools");toolbar.setAttribute("aria-label","Open studio windows");
- for(const [id,label]of [["overview","Workspace"],["rack","Channel rack"],["arrangement","Arrangement"],["systems","Systems"]]){
+ for(const [id,label]of [["transport","Transport"],["overview","Workspace"],["rack","Channel rack"],["arrangement","Arrangement"],["systems","Systems"]]){
  const b=node("button","launcher",label);b.type="button";b.addEventListener("click",()=>this.launch(id));toolbar.append(b);
  }
- toolbar.append(node("span","mockup-label","INTERACTIVE MOCKUP · NO AUDIO TRANSPORT"));
+ toolbar.append(node("span","mockup-label","DESKTOP LAB · PATTERN AUDIO ENABLED"));
  const workspace=node("main","desktop-workspace");workspace.setAttribute("aria-label","Studio desktop");
  const watermark=node("div","desktop-watermark");watermark.append(node("span","","FEELESS RECORDS"),node("strong","","Make room for sound."));workspace.append(watermark);
  const footer=node("footer","desktop-taskbar");const label=node("span","taskbar-label","WINDOWS");const tasks=node("div","task-list");tasks.setAttribute("aria-label","Open windows");footer.append(label,tasks,node("span","lab-status","Test environment"));
  this.root.replaceChildren(top,toolbar,workspace,footer);this.windows=new WindowSystem(workspace,tasks);
  this.launch("arrangement");this.launch("rack");if(workspace.clientWidth>=760)this.launch("overview");
  this.onResize=()=>this.windows.reflow();this.observer=typeof ResizeObserver==="undefined"?null:new ResizeObserver(this.onResize);this.observer?.observe(workspace);
+ this.core.loadPattern("pattern-1");
  }
  launch(id){
  if(this.windows.windows.has(id)){this.windows.restore(id);return;}
- const content=node("div","panel-content");let title,x=24,y=24,width=520,height=320;
- if(id==="overview"){
+ const content=node("div","panel-content");let title,onClose=null,x=24,y=24,width=520,height=320;
+ if(id==="transport"){
+ title="Transport";x=40;y=40;width=560;height=440;
+ const panel=new TransportPanel(this.core.transportController).mount(content);onClose=()=>panel.dispose();
+ }else if(id==="overview"){
  title="Workspace";x=54;y=36;width=370;height=280;
  content.append(node("span","eyebrow","DESKTOP + WINDOW SYSTEM"),node("h1","","Your studio, in windows."),node("p","","Open tools from the bar above. Drag title bars, resize from the lower corner, or maximize a window."));
  const list=node("ul","");for(const text of ["Minimize to the taskbar; click to restore.","Close and reopen tools without resetting the pattern.","Keyboard: focus a title bar or resize handle and use arrow keys."])list.append(node("li","",text));content.append(list);
  }else if(id==="rack"){
  title="Channel rack";x=450;y=70;width=570;height=320;
- content.append(node("span","eyebrow","PATTERN 01 / 16 STEPS"),node("h2","","Build a rhythm"),node("p","","Toggle steps to edit the shared pattern. This mockup does not play sound."));
+ content.append(node("span","eyebrow","PATTERN 01 / 16 STEPS"),node("h2","","Build a rhythm"),node("p","","Toggle steps, then open Transport and press Play. Pattern voices currently use a saw oscillator."));
  const rack=node("div","step-rack");
  for(const [row,channel]of ["Kick","Snare","Hat","Bass"].entries()){
  const line=node("div","step-row");line.append(node("span","channel-name",channel));
@@ -37,7 +42,7 @@ export class DesktopSystem{
  const button=node("button","step"+(Math.floor(step/4)%2?" alternate":""));button.type="button";
  const enabled=this.core.workflow.patterns.get("pattern-1").notes.some(n=>n.channelId===channel&&n.beat===step/4);
  button.setAttribute("aria-label",channel+" step "+(step+1));button.setAttribute("aria-pressed",String(enabled));
- button.addEventListener("click",()=>{const enabled=button.getAttribute("aria-pressed")!=="true";this.core.workflow.channelRack.setStep("pattern-1",channel,step,{enabled,note:[36,38,42,48][row]});button.setAttribute("aria-pressed",String(enabled));});
+ button.addEventListener("click",()=>{const enabled=button.getAttribute("aria-pressed")!=="true";this.core.workflow.channelRack.setStep("pattern-1",channel,step,{enabled,note:[36,38,42,48][row]});button.setAttribute("aria-pressed",String(enabled));this.core.loadPattern("pattern-1");});
  line.append(button);
  }rack.append(line);
  }content.append(rack);
@@ -53,9 +58,9 @@ export class DesktopSystem{
  content.append(node("span","eyebrow","CONNECTED FOUNDATION"),node("h2","","One shared studio core"));
  const list=node("ul","system-list");for(const name of Object.keys(this.core.workflow))list.append(node("li","",name));content.append(list);
  }
- const state=this.windows.open({id,title,content,x,y,width,height});
+ const state=this.windows.open({id,title,content,x,y,width,height,onClose});
  if(this.windows.area().width<760)this.windows.maximize(id);
  return state;
  }
- stop(){this.observer?.disconnect();this.windows.destroy();}
+ stop(){this.core.transportController.stop();this.observer?.disconnect();this.windows.destroy();}
 }

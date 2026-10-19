@@ -5,7 +5,7 @@ export function fitBounds(bounds,area){
 export class WindowSystem{
  constructor(workspace,taskbar){this.workspace=workspace;this.taskbar=taskbar;this.windows=new Map();this.layer=0;this.active=null;this.resize=()=>this.reflow();window.addEventListener("resize",this.resize);}
  area(){return {width:this.workspace.clientWidth,height:this.workspace.clientHeight};}
- open({id,title,content,x=24,y=24,width=520,height=360}){
+ open({id,title,content,x=24,y=24,width=520,height=360,onClose=null}){
  if(this.windows.has(id)){this.restore(id);return;}
  const element=document.createElement("section");element.className="studio-window";element.setAttribute("role","region");element.setAttribute("aria-label",title);
  const header=document.createElement("header");header.className="window-titlebar";
@@ -20,7 +20,7 @@ export class WindowSystem{
  const grip=document.createElement("button");grip.type="button";grip.className="window-resize";grip.textContent="◢";grip.setAttribute("aria-label","Resize "+title+": drag or use arrow keys");
  element.append(header,body,grip);
  const task=document.createElement("button");task.type="button";task.className="task-button";task.textContent=title;task.addEventListener("click",()=>this.restore(id));
- const state={id,title,element,task,handle,maxButton,bounds:{x,y,width,height},maximized:false,minimized:false};this.windows.set(id,state);
+ const state={id,title,onClose,element,task,handle,maxButton,bounds:{x,y,width,height},maximized:false,minimized:false};this.windows.set(id,state);
  this.workspace.append(element);this.taskbar.append(task);
  element.addEventListener("pointerdown",()=>this.focus(id));element.addEventListener("focusin",()=>this.focus(id));
  this.bindPointer(handle,state,false);this.bindPointer(grip,state,true);
@@ -59,7 +59,7 @@ export class WindowSystem{
  minimize(id){const state=this.windows.get(id);if(!state)return;state.minimized=true;this.apply(state);state.task.focus();}
  restore(id){const state=this.windows.get(id);if(!state)return;state.minimized=false;this.apply(state);this.focus(id);state.handle.focus();}
  maximize(id){const state=this.windows.get(id);if(!state)return;state.maximized=!state.maximized;this.apply(state);this.focus(id);}
- close(id){const state=this.windows.get(id);if(!state)return;state.element.remove();state.task.remove();this.windows.delete(id);if(this.active===id)this.active=null;this.taskbar.querySelector("button")?.focus();}
+ close(id){const state=this.windows.get(id);if(!state)return;state.onClose?.();state.element.remove();state.task.remove();this.windows.delete(id);if(this.active===id)this.active=null;this.taskbar.querySelector("button")?.focus();}
  reflow(){for(const state of this.windows.values())this.apply(state);}
  destroy(){window.removeEventListener("resize",this.resize);for(const id of [...this.windows.keys()])this.close(id);}
 }

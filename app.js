@@ -16,8 +16,9 @@ class AudioStudioApp {
     this.core=new StudioCore({bpm:120});
     this.theme=new ThemeSystem();
     this.master=new MasterVolumeSystem(100);
-    this.audio=new AudioSystem("./Perkele!.wav",this.master);
-    this.saw=new SawWaveSystem(this.master);
+    this.core.transportController.engine.master=this.master;
+    this.audio=new AudioSystem("./Perkele!.wav",this.master,this.core.transportController.engine);
+    this.saw=new SawWaveSystem(this.master,this.core.transportController.engine);
     this.chords=new ChordSystem();
     this.keyboard=new KeyboardSystem(this.saw,{onError:error=>{this.status.textContent="Keyboard audio error: "+error.message;},onNotesChanged:notes=>this.updateChord(notes)});
     this.layout=new LayoutSystem(document.querySelector("#app"));
@@ -139,7 +140,7 @@ class AudioStudioApp {
       button.disabled=false;
     }
   }
-  resume(){this.browser.start();this.keyboard.start();this.animation.start();this.fft?.start();}
-  stop(){this.masterKnob?.stop();this.audio.stop();this.browser.stop();this.keyboard.stop();this.releaseSaw();this.animation.stop();this.fft?.stop();}
+  resume(){this.masterKnob?.start();this.browser.start();this.keyboard.start();this.animation.start();this.fft?.start();}
+  stop(){this.core?.transportController.stop();this.masterKnob?.stop();this.audio.stop();this.browser.stop();this.keyboard.stop();this.releaseSaw();this.animation.stop();this.fft?.stop();}
 }
 new AudioStudioApp().start();
