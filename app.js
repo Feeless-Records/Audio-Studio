@@ -6,7 +6,7 @@ import {TextSystem} from "./systems/text-system.js";
 import {AudioSystem} from "./systems/audio.js";
 import {SawWaveSystem} from "./systems/saw-wave.js";
 import {FFTAnalyzer} from "./systems/fft-analyzer.js";
-import {StudioCore} from "./systems/studio-core.js";
+import {StudioCore} from "./systems/studio-core.js?v=transport-2";
 import {KeyboardSystem} from "./systems/keyboard.js";
 import {ChordSystem} from "./systems/chord.js";
 import {MIDISystem} from "./systems/midi.js";

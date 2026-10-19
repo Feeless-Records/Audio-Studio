@@ -1,4 +1,4 @@
-import {TransportController} from "./transport-controller.js";
+import {TransportController} from "./transport-controller.js?v=transport-2";
 import {WorkflowSystem} from "./workflow.js";
 import {ProjectSystem} from "./project.js";
 import {DocumentSystem} from "./document.js";

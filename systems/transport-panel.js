@@ -6,7 +6,7 @@ export class TransportPanel{
  const title=element("h2","Transport controller"),hint=element("p","Plays Channel Rack pattern 01 through the shared audio engine. Empty steps are silent. Render exports this pattern once.");
  const buttons=element("div");buttons.className="transport-buttons";
  const status=element("output","Stopped · beat 0.00"),message=element("p");message.setAttribute("role","status");
- const run=action=>Promise.resolve().then(action).catch(error=>{message.textContent=error.message;});
+ const run=action=>Promise.resolve().then(action).catch(error=>{console.error("Transport operation failed",error);message.textContent=error.message;});
  const button=(label,action)=>{const b=element("button",label);b.type="button";b.addEventListener("click",()=>run(action));buttons.append(b);return b;};
  this.play=button("Play",()=>controller.play());button("Pause",()=>controller.pause());button("Stop",()=>controller.stop());
  this.render=button("Render WAV",async()=>{

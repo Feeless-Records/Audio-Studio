@@ -1,6 +1,6 @@
-import {TransportPanel} from "./transport-panel.js";
+import {TransportPanel} from "./transport-panel.js?v=transport-2";
 import {WindowSystem} from "./window-system.js";
-import {StudioCore} from "./studio-core.js";
+import {StudioCore} from "./studio-core.js?v=transport-2";
 function node(tag,className,text){const el=document.createElement(tag);if(className)el.className=className;if(text!==undefined)el.textContent=text;return el;}
 export class DesktopSystem{
  constructor(root){this.root=root;this.core=new StudioCore();this.core.workflow.patterns.create("pattern-1");for(const id of ["Kick","Snare","Hat","Bass"])this.core.workflow.channelRack.add(id);}
