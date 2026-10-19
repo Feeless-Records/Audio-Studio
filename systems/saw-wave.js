@@ -33,8 +33,8 @@ export class SawWaveSystem {
       oscillator.type="sawtooth";
       oscillator.frequency.setValueAtTime(Math.max(20,Math.min(voice.baseFrequency,this.context.sampleRate/2-1)),now);
       gain.gain.setValueAtTime(0,now);
-      // Limit polyphonic amplitude to reduce clipping.
-      gain.gain.linearRampToValueAtTime(this.outputGain*.22,now+.012);
+      // Each keyboard voice uses the configured -3 dB gain.
+      gain.gain.linearRampToValueAtTime(this.outputGain,now+.012);
       oscillator.connect(gain);gain.connect(this.analyser);
       oscillator.onended=()=>{oscillator.disconnect();gain.disconnect();};
       voice.oscillator=oscillator;voice.gain=gain;voice.pending=false;
