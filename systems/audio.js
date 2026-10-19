@@ -1,9 +1,11 @@
 export class AudioSystem {
-  constructor(url="./Perkele!.wav"){this.url=url;this.playing=false;this.audio=new Audio();this.audio.preload="auto";this.audio.src=url;}
+  constructor(url="./Perkele!.wav"){this.url=url;this.playing=false;this.audio=new Audio();this.audio.preload="auto";this.audio.src=url;this.context=null;this.analyser=null;this.source=null;}
   async play(){
     if(this.playing)return;
     this.playing=true;
     try{
+      this.connectAnalyzer();
+      await this.context.resume();
       this.audio.currentTime=0;
       await new Promise((resolve,reject)=>{
         const cleanup=()=>{this.audio.removeEventListener("ended",end);this.audio.removeEventListener("error",fail);};
@@ -14,6 +16,17 @@ export class AudioSystem {
         this.audio.play().catch(fail);
       });
     }finally{this.playing=false;}
+  }
+  connectAnalyzer(){
+    if(this.analyser)return;
+    const Context=window.AudioContext||window.webkitAudioContext;
+    this.context=new Context();
+    this.source=this.context.createMediaElementSource(this.audio);
+    this.analyser=this.context.createAnalyser();
+    this.analyser.fftSize=4096;this.analyser.minDecibels=-60;
+    this.analyser.maxDecibels=0;this.analyser.smoothingTimeConstant=.65;
+    this.source.connect(this.analyser);
+    this.analyser.connect(this.context.destination);
   }
   stop(){this.audio.pause();this.audio.currentTime=0;this.playing=false;}
 }
