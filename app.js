@@ -4,6 +4,7 @@ import {ThemeSystem} from "./systems/theme.js";
 import {TextSystem} from "./systems/text-system.js";
 import {AudioSystem} from "./systems/audio.js";
 import {SawWaveSystem} from "./systems/saw-wave.js";
+import {FFTAnalyzer} from "./systems/fft-analyzer.js";
 class AudioStudioApp {
   constructor(){
     this.theme=new ThemeSystem();
@@ -23,6 +24,8 @@ class AudioStudioApp {
     this.sawButton=controls.sawButton;
     this.frequencySlider=controls.frequencySlider;
     this.frequencyValue=controls.frequencyValue;
+    this.fft=new FFTAnalyzer(controls.fftCanvas,[this.saw,this.audio]);
+    this.fft.start();
     this.startButton.addEventListener("click",()=>this.playSound(this.startButton));
     this.configureSaw();
     this.label.textContent=this.message;
@@ -92,6 +95,6 @@ class AudioStudioApp {
       button.disabled=false;
     }
   }
-  stop(){this.releaseSaw();this.animation.stop();}
+  stop(){this.releaseSaw();this.animation.stop();this.fft?.stop();}
 }
 new AudioStudioApp().start();
