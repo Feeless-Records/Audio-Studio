@@ -20,12 +20,16 @@ export class LayoutSystem {
     const fftCanvas=document.createElement("canvas");
     fftCanvas.id="fftAnalyzer";
     fftCanvas.setAttribute("aria-label","FFT spectrum analyzer with sixteen bands");
+    const chordField=document.createElement("div");
+    chordField.id="chordDisplay";chordField.setAttribute("role","status");
+    chordField.setAttribute("aria-live","off");
+    chordField.textContent="Аккорд: — | Нет нажатых нот";
     const p=document.createElement("p");p.textContent=subtitle;
     const hint=document.createElement("p");
     hint.className="keyboard-hint";
     hint.textContent="Keyboard: Q 2 W 3 E ... [ = ] (C4–G5), Z S X D C ... / (C3–E4). Hold keys to play notes.";
-    group.append(h,button,saw,label,slider,fftCanvas,hint,p);
+    group.append(h,button,saw,label,slider,fftCanvas,chordField,hint,p);
     this.root.replaceChildren(group);
-    return {startButton:button,sawButton:saw,frequencySlider:slider,frequencyValue:value,fftCanvas};
+    return {startButton:button,sawButton:saw,frequencySlider:slider,frequencyValue:value,fftCanvas,chordField};
   }
 }
