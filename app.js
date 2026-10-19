@@ -5,8 +5,10 @@ import {TextSystem} from "./systems/text-system.js";
 import {AudioSystem} from "./systems/audio.js";
 import {SawWaveSystem} from "./systems/saw-wave.js";
 import {FFTAnalyzer} from "./systems/fft-analyzer.js";
+import {StudioCore} from "./systems/studio-core.js";
 class AudioStudioApp {
   constructor(){
+    this.core=new StudioCore({bpm:120});
     this.theme=new ThemeSystem();
     this.audio=new AudioSystem();
     this.saw=new SawWaveSystem();
