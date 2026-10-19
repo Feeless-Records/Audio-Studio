@@ -4,7 +4,7 @@ export class LayoutSystem {
     const group=document.createElement("div");group.className="welcome-group";
     const h=document.createElement("h1");h.textContent=title;
     const button=document.createElement("button");
-    button.type="button";button.id="sine-button";button.textContent="Play 600 Hz sine";
+    button.type="button";button.id="sine-button";button.textContent="▶ Play Perkele!";
     button.setAttribute("aria-pressed","false");
     const p=document.createElement("p");p.textContent=subtitle;
     group.append(h,button,p);
