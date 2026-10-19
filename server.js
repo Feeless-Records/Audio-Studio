@@ -7,7 +7,7 @@ const types = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; ch
 const server = http.createServer((req, res) => {
   const pathname = new URL(req.url, "http://localhost").pathname;
   const file = pathname === "/" ? "index.html" : pathname.slice(1);
-  if (!["index.html", "app.js", "text-layout.wasm"].includes(file)) {
+  if (!["index.html", "app.js", "text-layout.wasm", "systems/animation.js", "systems/layout.js", "systems/theme.js", "systems/text-processor.js", "systems/text-renderer.js", "systems/text-system.js"].includes(file)) {
     res.writeHead(404); res.end("Not found"); return;
   }
   fs.readFile(path.join(root, file), (err, contents) => {
