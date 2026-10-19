@@ -21,7 +21,10 @@ export class LayoutSystem {
     fftCanvas.id="fftAnalyzer";
     fftCanvas.setAttribute("aria-label","FFT spectrum analyzer with sixteen bands");
     const p=document.createElement("p");p.textContent=subtitle;
-    group.append(h,button,saw,label,slider,fftCanvas,p);
+    const hint=document.createElement("p");
+    hint.className="keyboard-hint";
+    hint.textContent="Keyboard: Q 2 W 3 E ... [ (C4–F5), Z S X D C ... / (C3–E4). Hold keys to play notes.";
+    group.append(h,button,saw,label,slider,fftCanvas,hint,p);
     this.root.replaceChildren(group);
     return {startButton:button,sawButton:saw,frequencySlider:slider,frequencyValue:value,fftCanvas};
   }
