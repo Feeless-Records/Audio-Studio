@@ -8,12 +8,12 @@
 :root{color-scheme:dark}
 *{box-sizing:border-box}
 html,body{height:100%;margin:0}
-body{background:#10121a;color:#eef1f8;font-family:system-ui,sans-serif;overflow:hidden}
-main{height:100%;display:grid;place-content:center;text-align:center;gap:12px}
+body{background:#10121a;color:#eef1f8;font-family:system-ui,sans-serif;overflow:auto}
+main{height:auto;min-height:100vh;min-height:100dvh;padding:24px 16px 72px;display:grid;place-content:center;text-align:center;gap:12px}
 h1{font-size:clamp(2.5rem,7vw,5rem);margin:0}
 p{margin:0;color:#aeb5c6}
-.welcome-group{display:flex;flex-direction:column;align-items:stretch;gap:12px}
-.welcome-group h1{white-space:nowrap}
+.welcome-group{display:flex;flex-direction:column;align-items:stretch;width:min(var(--device-max-width,960px),calc(100vw - 32px));gap:var(--device-gap,12px);min-width:0}
+.welcome-group h1{white-space:normal}
 #startButton,#sawButton,#quintButton{height:1cm;min-height:38px;width:100%;border:1px solid #f6c16c;border-radius:7px;background:#222a3b;color:#ffda9b;font:600 16px system-ui,sans-serif;cursor:pointer;transition:background .1s,color .1s,transform .1s,box-shadow .1s}
 #startButton:active,#startButton.is-playing,#sawButton:active,#sawButton.is-playing,#quintButton:active,#quintButton[aria-pressed="true"]{background:#ffb542;color:#131722;transform:translateY(2px);box-shadow:inset 0 3px 8px #0007}
 #startButton:focus-visible,#sawButton:focus-visible,#quintButton:focus-visible{outline:3px solid #fff;outline-offset:3px}
@@ -34,17 +34,12 @@ p{margin:0;color:#aeb5c6}
 .fly-track>svg{overflow:visible}
 #flying-label{display:flex;align-items:center;justify-content:center;font-size:clamp(20px,3.3vw,37px);font-weight:900;white-space:nowrap;color:#ffb542;text-shadow:0 0 12px #fb923c,0 0 28px #ea580c}
 #flying-label[hidden]{display:none}
-#status{position:fixed;bottom:16px;left:20px;font-size:12px;color:#92a0b6}
+#status{position:static;margin:0 16px 16px;overflow-wrap:anywhere;font-size:12px;color:#92a0b6}
 
 
 /* Device families: retain usable controls in small and rotated viewports. */
-body{overflow:auto}
-main{height:auto;min-height:100vh;min-height:100dvh;padding:24px 16px 72px}
-.welcome-group{width:min(var(--device-max-width,960px),calc(100vw - 32px));gap:var(--device-gap,12px);min-width:0}
-.welcome-group h1{white-space:normal}
 .welcome-group p{overflow-wrap:anywhere}
 #chordDisplay{box-sizing:border-box}
-#status{position:static;margin:0 16px 16px;overflow-wrap:anywhere}
 html[data-device="mobile"] #startButton,html[data-device="mobile"] #sawButton,html[data-device="mobile"] #quintButton{min-height:44px}
 html[data-device="mobile"] .keyboard-hint{font-size:12px}
 html[data-orientation="landscape"][data-device="mobile"] main{padding-top:16px}

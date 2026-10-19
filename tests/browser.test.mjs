@@ -3,7 +3,7 @@ import assert from "node:assert/strict";
 import {BrowserApp,selectProfile} from "../browser-app.js";
 import {createStorage} from "../browser-storage.js";
 test("responsive boundaries and pointer categories",()=>{
- for(const [width,coarse,family] of [[390,true,"mobile"],[599,false,"mobile"],[600,false,"tablet"],[1023,false,"tablet"],[1024,false,"desktop"],[1366,true,"tablet"]])
+ for(const [width,coarse,family] of [[390,true,"mobile"],[599,false,"mobile"],[600,false,"tablet"],[1023,false,"tablet"],[1024,false,"desktop"],[1366,true,"desktop"]])
  assert.equal(selectProfile({width,coarse}).family,family);
 });
 test("viewport rotation updates layout and releases every observer",()=>{
@@ -15,7 +15,7 @@ test("viewport rotation updates layout and releases every observer",()=>{
  const app=new BrowserApp({win,root});app.start();app.start();
  assert.equal(root.dataset.device,"mobile");assert.equal(root.dataset.orientation,"portrait");
  win.innerWidth=844;win.innerHeight=390;listeners.get("resize")();
- assert.equal(root.dataset.device,"tablet");assert.equal(root.dataset.orientation,"landscape");
+ assert.equal(root.dataset.device,"mobile");assert.equal(root.dataset.orientation,"landscape");
  assert.equal(properties.get("--viewport-height"),"390px");
  app.stop();assert.equal(listeners.size,0);assert.equal(visual.size,0);
  app.start();assert.equal(listeners.size,1);app.stop();

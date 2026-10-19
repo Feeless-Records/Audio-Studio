@@ -44,6 +44,8 @@ class AudioStudioApp {
     this.keyboard.start();
     this.label.textContent=this.message;
     this.animation.start();
+    window.addEventListener("pagehide",()=>this.stop());
+    window.addEventListener("pageshow",event=>{if(event.persisted)this.resume();});
     try{
       await this.text.initialize();
       const result=await this.text.render(this.message);
@@ -53,7 +55,7 @@ class AudioStudioApp {
       this.status.textContent="HTML fallback + shared animation: "+error.message;
       console.error(error);
     }
-    window.addEventListener("pagehide",()=>this.stop(),{once:true});
+
   }
   toggleQuintCircle(){
     if(!this.quintCircle){
@@ -61,6 +63,7 @@ class AudioStudioApp {
       this.quintCircle.id="quintCircle";
       this.quintCircle.src="./quint-circle.jpg";
       this.quintCircle.alt="Квинтовый круг: мажорные и минорные тональности";
+      this.quintCircle.hidden=true;
       document.body.append(this.quintCircle);
     }
     this.quintCircle.hidden=!this.quintCircle.hidden;
@@ -133,6 +136,7 @@ class AudioStudioApp {
       button.disabled=false;
     }
   }
-  stop(){this.browser.stop();this.keyboard.stop();this.releaseSaw();this.animation.stop();this.fft?.stop();}
+  resume(){this.browser.start();this.keyboard.start();this.animation.start();this.fft?.start();}
+  stop(){this.audio.stop();this.browser.stop();this.keyboard.stop();this.releaseSaw();this.animation.stop();this.fft?.stop();}
 }
 new AudioStudioApp().start();

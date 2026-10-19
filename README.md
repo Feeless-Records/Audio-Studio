@@ -1,36 +1,8 @@
-# Audio Studio
-
-A planned collaborative, browser-based music production environment from Feeless Records.
-
-## Vision
-
-Build a web-based digital audio workstation (DAW) supporting music composition, editing, audio processing, and real-time project collaboration.
-
-## Proposed technology
-
-- **Frontend:** React, TypeScript, and Web Audio API / AudioWorklet
-- **Backend:** Node.js and TypeScript
-- **Collaboration:** WebSockets and a conflict-free collaborative data model (to be selected)
-- **Audio processing:** Browser AudioWorklets, with an option for native/WASM DSP modules
-
-> This repository currently contains Git configuration only. The application architecture and implementation are not yet committed.
-
-## Proposed repository structure
-
-```text
-apps/
-  web/       # React application
-  server/    # Node.js API and collaboration server
-packages/
-  audio-engine/  # Audio and DSP modules
-  shared/        # Shared types and utilities
-docs/             # Architecture and development notes
-```
-
-## Getting started
-
-Application setup instructions will be added once the project scaffold is created.
-
-## Contributing
-
-Use feature branches and pull requests. Keep secrets, API keys, generated builds, and local audio renders out of Git.
+# Feeless Records Audio Studio
+Browser-based audio studio prototype, using native JavaScript modules, Web Audio, and a WASM text renderer.
+Run locally with Node.js: `node server.js`, then open http://localhost:4173.
+Run checks: `node --test tests/*.test.mjs`.
+GitHub Pages publishes the root of main at https://feeless-records.github.io/Audio-Studio/.
+Current UI: sample playback, polyphonic saw keyboard, tuning, chord display, FFT and circle-of-fifths reference.
+See DEVICE-FAMILIES.md for responsive families and WORKFLOW-SYSTEMS.md for the new workflow classes and their implementation boundaries.
+Real-time collaboration and complete DAW editing are future work.

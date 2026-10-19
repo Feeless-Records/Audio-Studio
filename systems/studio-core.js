@@ -1,3 +1,4 @@
+import {WorkflowSystem} from "./workflow.js";
 import {ProjectSystem} from "./project.js";
 import {DocumentSystem} from "./document.js";
 import {TimelineSystem} from "./timeline.js";
@@ -15,8 +16,10 @@ export class StudioCore {
     this.sequencer=new SequencingSystem({timeline:this.timeline,events:this.project.events});
     this.parameters=new ParametricSystem().define("cutoff",{value:1000,min:20,max:20000});
     this.frequency=FrequencySystem;this.velocity=VelocitySystem;
+    this.workflow=new WorkflowSystem(this.timeline);
     this.sound=null;this.sampling=null;
   }
+  loadPattern(id){this.sequencer.notes=this.workflow.compilePattern(id);return this.sequencer.notes.length;}
   connectAudio(context){this.sound=new SoundSystem(context);this.sampling=new SamplingSystem(context);return this;}
   setTempo(bpm){this.project.setTempo(bpm);this.timeline.setTempo(bpm);}
   scheduleBars(startBeat,endBeat){if(!this.sound)throw new Error("Call connectAudio first");return this.sequencer.schedule(this.sound,{startBeat,endBeat});}

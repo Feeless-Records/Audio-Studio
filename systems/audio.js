@@ -1,21 +1,24 @@
 export class AudioSystem {
-  constructor(url="./Perkele!.wav"){this.url=url;this.playing=false;this.audio=new Audio();this.audio.preload="auto";this.audio.src=url;this.context=null;this.analyser=null;this.source=null;this.outputGain=Math.pow(10,-6/20);this.volumeNode=null;}
+  constructor(url="./Perkele!.wav"){this.url=url;this.playing=false;this.audio=new Audio();this.audio.preload="auto";this.audio.src=url;this.cancelPlayback=null;this.playGeneration=0;this.context=null;this.analyser=null;this.source=null;this.outputGain=Math.pow(10,-6/20);this.volumeNode=null;}
   async play(){
     if(this.playing)return;
-    this.playing=true;
+    this.playing=true;const generation=++this.playGeneration;
     try{
       this.connectAnalyzer();
       await this.context.resume();
+      if(generation!==this.playGeneration)return;
       this.audio.currentTime=0;
       await new Promise((resolve,reject)=>{
-        const cleanup=()=>{this.audio.removeEventListener("ended",end);this.audio.removeEventListener("error",fail);};
-        const end=()=>{cleanup();resolve();};
-        const fail=()=>{cleanup();reject(new Error("Audio file unavailable or unsupported"));};
+        let settled=false;
+        const cleanup=()=>{if(this.cancelPlayback===end)this.cancelPlayback=null;this.audio.removeEventListener("ended",end);this.audio.removeEventListener("error",fail);};
+        const end=()=>{if(settled)return;settled=true;cleanup();resolve();};
+        const fail=()=>{if(settled)return;settled=true;cleanup();reject(new Error("Audio file unavailable or unsupported"));};
+        this.cancelPlayback=end;
         this.audio.addEventListener("ended",end,{once:true});
         this.audio.addEventListener("error",fail,{once:true});
         this.audio.play().catch(fail);
       });
-    }finally{this.playing=false;}
+    }finally{if(generation===this.playGeneration)this.playing=false;}
   }
   connectAnalyzer(){
     if(this.analyser)return;
@@ -31,5 +34,5 @@ export class AudioSystem {
     this.volumeNode.connect(this.analyser);
     this.analyser.connect(this.context.destination);
   }
-  stop(){this.audio.pause();this.audio.currentTime=0;this.playing=false;}
+  stop(){++this.playGeneration;this.cancelPlayback?.();this.audio.pause();this.audio.currentTime=0;this.playing=false;}
 }
