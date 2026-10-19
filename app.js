@@ -9,6 +9,7 @@ import {FFTAnalyzer} from "./systems/fft-analyzer.js";
 import {StudioCore} from "./systems/studio-core.js";
 import {KeyboardSystem} from "./systems/keyboard.js";
 import {ChordSystem} from "./systems/chord.js";
+import {MIDISystem} from "./systems/midi.js";
 import {MasterVolumeSystem,MasterVolumeKnob} from "./systems/master-volume.js";
 class AudioStudioApp {
   constructor(){
@@ -20,7 +21,10 @@ class AudioStudioApp {
     this.audio=new AudioSystem("./Perkele!.wav",this.master,this.core.transportController.engine);
     this.saw=new SawWaveSystem(this.master,this.core.transportController.engine);
     this.chords=new ChordSystem();
-    this.keyboard=new KeyboardSystem(this.saw,{onError:error=>{this.status.textContent="Keyboard audio error: "+error.message;},onNotesChanged:notes=>this.updateChord(notes)});
+    this.keyboard=new KeyboardSystem(this.saw,{onError:error=>{this.status.textContent="Keyboard audio error: "+error.message;},onNotesChanged:notes=>{this.keyboardNotes=notes;this.updateChord();}});
+    this.midiNotes=[];
+    this.keyboardNotes=[];
+    this.midi=new MIDISystem(this.saw,{onNotesChanged:notes=>{this.midiNotes=notes;this.updateChord();},onStatus:state=>{this.midiStatus=state;},onError:error=>console.warn("MIDI:",error)});
     this.layout=new LayoutSystem(document.querySelector("#app"));
     this.animation=new AnimationSystem(document.querySelector(".fly-track"));
     this.text=new TextSystem(document.querySelector("#flying"));
@@ -46,6 +50,7 @@ class AudioStudioApp {
     this.startButton.addEventListener("click",()=>this.playSound(this.startButton));
     this.configureSaw();
     this.keyboard.start();
+    this.midi.start();
     this.label.textContent=this.message;
     this.animation.start();
     window.addEventListener("pagehide",()=>this.stop());
@@ -75,7 +80,9 @@ class AudioStudioApp {
     this.quintButton.setAttribute("aria-pressed",String(visible));
     this.quintButton.textContent=visible?"Hide quint circle":"Show quint circle";
   }
-  updateChord(notes){
+  updateChord(notes=this.keyboardNotes){
+    this.keyboardNotes=notes;
+    notes=[...notes,...this.midiNotes];
     if(!this.chordField)return;
     const result=this.chords.describe(notes);
     this.chordField.textContent="Аккорд: "+result.chord+" | "+result.notes;
@@ -114,6 +121,7 @@ class AudioStudioApp {
     const frequency=Math.round(20*Math.pow(1000,position));
     this.saw.setFrequency(frequency);
     this.keyboard.setTuningReference(frequency);
+    this.midi.setTuningReference(frequency);
     this.frequencyValue.textContent=frequency.toLocaleString("ru-RU")+" Hz";
   }
   async pressSaw(){
@@ -140,7 +148,7 @@ class AudioStudioApp {
       button.disabled=false;
     }
   }
-  resume(){this.masterKnob?.start();this.browser.start();this.keyboard.start();this.animation.start();this.fft?.start();}
-  stop(){this.core?.transportController.stop();this.masterKnob?.stop();this.audio.stop();this.browser.stop();this.keyboard.stop();this.releaseSaw();this.animation.stop();this.fft?.stop();}
+  resume(){this.masterKnob?.start();this.browser.start();this.keyboard.start();this.midi.start();this.animation.start();this.fft?.start();}
+  stop(){this.core?.transportController.stop();this.masterKnob?.stop();this.audio.stop();this.browser.stop();this.keyboard.stop();this.midi.stop();this.releaseSaw();this.animation.stop();this.fft?.stop();}
 }
 new AudioStudioApp().start();

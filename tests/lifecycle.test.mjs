@@ -13,7 +13,7 @@ test("circle appears on first click and alternates",()=>{
 });
 test("app shutdown stops sample and resume restarts paused services",()=>{
  const App=appClass(),app=Object.create(App.prototype),calls=[];
- for(const name of ["audio","browser","keyboard","animation","fft"])app[name]={stop:()=>calls.push(name+":stop"),start:()=>calls.push(name+":start")};
+ for(const name of ["audio","browser","keyboard","midi","animation","fft"])app[name]={stop:()=>calls.push(name+":stop"),start:()=>calls.push(name+":start")};
  app.releaseSaw=()=>calls.push("saw:release");app.stop();app.resume();
  assert.ok(calls.includes("audio:stop"));for(const name of ["browser","keyboard","animation","fft"])assert.ok(calls.includes(name+":start"));
 });
