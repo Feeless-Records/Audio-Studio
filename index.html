@@ -14,9 +14,12 @@ h1{font-size:clamp(2.5rem,7vw,5rem);margin:0}
 p{margin:0;color:#aeb5c6}
 .welcome-group{display:flex;flex-direction:column;align-items:stretch;gap:12px}
 .welcome-group h1{white-space:nowrap}
-#startButton{height:1cm;min-height:38px;width:100%;border:1px solid #f6c16c;border-radius:7px;background:#222a3b;color:#ffda9b;font:600 16px system-ui,sans-serif;cursor:pointer;transition:background .1s,color .1s,transform .1s,box-shadow .1s}
-#startButton:active,#startButton.is-playing{background:#ffb542;color:#131722;transform:translateY(2px);box-shadow:inset 0 3px 8px #0007}
-#startButton:focus-visible{outline:3px solid #fff;outline-offset:3px}
+#startButton,#sawButton{height:1cm;min-height:38px;width:100%;border:1px solid #f6c16c;border-radius:7px;background:#222a3b;color:#ffda9b;font:600 16px system-ui,sans-serif;cursor:pointer;transition:background .1s,color .1s,transform .1s,box-shadow .1s}
+#startButton:active,#startButton.is-playing,#sawButton:active,#sawButton.is-playing{background:#ffb542;color:#131722;transform:translateY(2px);box-shadow:inset 0 3px 8px #0007}
+#startButton:focus-visible,#sawButton:focus-visible{outline:3px solid #fff;outline-offset:3px}
+.frequency-label{font-size:13px;color:#aeb5c6;display:flex;justify-content:space-between;align-items:center}
+#frequencySlider{width:100%;accent-color:#ffb542;cursor:pointer;touch-action:pan-y}
+#sawButton{touch-action:none}
 .fly-track{position:fixed;inset:0;width:100vw;height:100vh;overflow:hidden;pointer-events:none;--fly-x:0px;--fly-y:0px}
 #flying,.fly-track>svg,#flying-label{
   position:absolute;top:0;left:0;width:min(540px,75vw);height:100px;
