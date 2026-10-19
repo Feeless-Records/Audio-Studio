@@ -1,26 +1,35 @@
-// A single time-based controller moves every visual layer together.
-// CSS owns appearance; JavaScript owns the shared position.
-export function animateFlying(track, {speed=180, amplitude=24}={}) {
-  let paused=false, frame=0, previous=0, x=0, direction=1;
-  const update=(time)=>{
-    const dt=previous?Math.min((time-previous)/1000,0.05):0;
-    previous=time;
-    const width=Math.min(track.clientWidth*0.75,540);
-    const maxX=Math.max(0,track.clientWidth-width);
-    if (!paused) {
-      x+=direction*speed*dt;
-      if (x>=maxX) {x=maxX;direction=-1;}
-      if (x<=0) {x=0;direction=1;}
-    }
-    const y=maxX>0?Math.sin((x/maxX)*Math.PI)*amplitude:0;
-    track.style.setProperty("--fly-x",x+"px");
-    track.style.setProperty("--fly-y",y+"px");
-    frame=requestAnimationFrame(update);
-  };
-  frame=requestAnimationFrame(update);
-  return {
-    pause(){paused=true;},
-    play(){paused=false;previous=0;},
-    stop(){cancelAnimationFrame(frame);track.style.removeProperty("--fly-x");track.style.removeProperty("--fly-y");}
-  };
+export class AnimationSystem {
+  constructor(track,{speed=180,amplitude=24}={}){
+    this.track=track;this.speed=speed;this.amplitude=amplitude;
+    this.x=0;this.direction=1;this.previous=0;this.frame=null;this.paused=false;
+    this.tick=this.tick.bind(this);
+  }
+  start(){if(this.frame===null)this.frame=requestAnimationFrame(this.tick);return this;}
+  tick(timestamp){
+    this.advance(timestamp);
+    this.applyPosition();
+    this.frame=requestAnimationFrame(this.tick);
+  }
+  advance(timestamp){
+    const dt=this.previous?Math.min((timestamp-this.previous)/1000,.05):0;
+    this.previous=timestamp;
+    if(this.paused)return;
+    const max=this.maxTravel();
+    this.x+=this.direction*this.speed*dt;
+    if(this.x>=max){this.x=max;this.direction=-1;}
+    if(this.x<=0){this.x=0;this.direction=1;}
+  }
+  maxTravel(){return Math.max(0,this.track.clientWidth-Math.min(540,this.track.clientWidth*.75));}
+  applyPosition(){
+    const max=this.maxTravel();
+    const y=max>0?Math.sin(Math.PI*this.x/max)*this.amplitude:0;
+    this.track.style.setProperty("--fly-x",this.x+"px");
+    this.track.style.setProperty("--fly-y",y+"px");
+  }
+  pause(){this.paused=true;}
+  play(){this.paused=false;this.previous=0;this.start();}
+  stop(){
+    if(this.frame!==null)cancelAnimationFrame(this.frame);
+    this.frame=null;this.previous=0;
+  }
 }
