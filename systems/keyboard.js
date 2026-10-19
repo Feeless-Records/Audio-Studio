@@ -5,17 +5,18 @@ export class KeyboardSystem {
     ["KeyQ",60],["Digit2",61],["KeyW",62],["Digit3",63],["KeyE",64],
     ["KeyR",65],["Digit5",66],["KeyT",67],["Digit6",68],["KeyY",69],
     ["Digit7",70],["KeyU",71],["KeyI",72],["Digit9",73],["KeyO",74],
-    ["Digit0",75],["KeyP",76],["BracketLeft",77],
+    ["Digit0",75],["KeyP",76],["BracketLeft",77],["BracketRight",78],
     ["KeyZ",48],["KeyS",49],["KeyX",50],["KeyD",51],["KeyC",52],
     ["KeyV",53],["KeyG",54],["KeyB",55],["KeyH",56],["KeyN",57],
     ["KeyJ",58],["KeyM",59],["Comma",60],["KeyL",61],
     ["Period",62],["Semicolon",63],["Slash",64]
   ]);
   constructor(synth,{onError=console.error}={}){
-    this.synth=synth;this.onError=onError;this.pressed=new Set();
+    this.synth=synth;this.onError=onError;this.pressed=new Set();this.tuningReference=440;
     this.keyDown=this.keyDown.bind(this);this.keyUp=this.keyUp.bind(this);
     this.releaseAll=this.releaseAll.bind(this);this.onVisibility=this.onVisibility.bind(this);
   }
+  setTuningReference(hz){this.tuningReference=hz;this.synth.retuneNotes(hz);}
   start(){
     window.addEventListener("keydown",this.keyDown);
     window.addEventListener("keyup",this.keyUp);
@@ -30,7 +31,7 @@ export class KeyboardSystem {
     event.preventDefault();
     if(this.pressed.has(event.code))return;
     this.pressed.add(event.code);
-    this.synth.noteOn(event.code,FrequencySystem.midiToHz(note)).catch(this.onError);
+    this.synth.noteOn(event.code,FrequencySystem.midiToHz(note)*this.tuningReference/440,note).catch(this.onError);
   }
   keyUp(event){
     if(!this.pressed.has(event.code))return;
