@@ -2,6 +2,7 @@ export class SawWaveSystem {
   constructor(){
     this.context=null;this.oscillator=null;this.gain=null;
     this.outputGain=Math.pow(10,-3/20);this.frequency=440;this.held=false;this.generation=0;this.analyser=null;
+    this.voices=new Map();
   }
   setFrequency(value){
     this.frequency=Math.max(20,Math.min(20000,Number(value)||440));
@@ -10,13 +11,56 @@ export class SawWaveSystem {
         Math.min(this.frequency,this.context.sampleRate/2-1),this.context.currentTime,.008);
     }
   }
+  async ensureContext(){
+    if(!this.context)this.context=new (window.AudioContext||window.webkitAudioContext)();
+    if(!this.analyser){
+      this.analyser=this.context.createAnalyser();
+      this.analyser.fftSize=4096;this.analyser.minDecibels=-60;
+      this.analyser.maxDecibels=0;this.analyser.smoothingTimeConstant=.65;
+      this.analyser.connect(this.context.destination);
+    }
+    await this.context.resume();
+  }
+  async noteOn(key,frequency){
+    if(this.voices.has(key))return;
+    const voice={pending:true,released:false};
+    this.voices.set(key,voice);
+    try{
+      await this.ensureContext();
+      if(voice.released||this.voices.get(key)!==voice)return;
+      const now=this.context.currentTime;
+      const oscillator=this.context.createOscillator(),gain=this.context.createGain();
+      oscillator.type="sawtooth";
+      oscillator.frequency.setValueAtTime(Math.max(20,Math.min(frequency,this.context.sampleRate/2-1)),now);
+      gain.gain.setValueAtTime(0,now);
+      // Limit polyphonic amplitude to reduce clipping.
+      gain.gain.linearRampToValueAtTime(this.outputGain*.22,now+.012);
+      oscillator.connect(gain);gain.connect(this.analyser);
+      oscillator.onended=()=>{oscillator.disconnect();gain.disconnect();};
+      voice.oscillator=oscillator;voice.gain=gain;voice.pending=false;
+      oscillator.start(now);
+    }catch(error){this.voices.delete(key);throw error;}
+  }
+  noteOff(key){
+    const voice=this.voices.get(key);
+    if(!voice)return;
+    voice.released=true;this.voices.delete(key);
+    if(!voice.oscillator)return;
+    const now=this.context.currentTime;
+    voice.gain.gain.cancelScheduledValues(now);
+    voice.gain.gain.setValueAtTime(voice.gain.gain.value,now);
+    voice.gain.gain.linearRampToValueAtTime(0,now+.018);
+    voice.oscillator.stop(now+.02);
+  }
+  releaseAllNotes(){
+    for(const key of [...this.voices.keys()])this.noteOff(key);
+  }
   async press(){
     if(this.held)return;
     this.held=true;
     const generation=++this.generation;
     try{
-      if(!this.context)this.context=new (window.AudioContext||window.webkitAudioContext)();
-      await this.context.resume();
+      await this.ensureContext();
       if(!this.held||generation!==this.generation)return;
       const now=this.context.currentTime;
       const oscillator=this.context.createOscillator();
