@@ -17,9 +17,12 @@ export class LayoutSystem {
     const slider=document.createElement("input");
     slider.type="range";slider.id="frequencySlider";slider.min="0";slider.max="1000";
     slider.step="1";slider.value=String(Math.round(1000*Math.log(440/20)/Math.log(1000)));slider.setAttribute("aria-label","Saw wave frequency in Hz");
+    const fftCanvas=document.createElement("canvas");
+    fftCanvas.id="fftAnalyzer";
+    fftCanvas.setAttribute("aria-label","FFT spectrum analyzer with sixteen bands");
     const p=document.createElement("p");p.textContent=subtitle;
-    group.append(h,button,saw,label,slider,p);
+    group.append(h,button,saw,label,slider,fftCanvas,p);
     this.root.replaceChildren(group);
-    return {startButton:button,sawButton:saw,frequencySlider:slider,frequencyValue:value};
+    return {startButton:button,sawButton:saw,frequencySlider:slider,frequencyValue:value,fftCanvas};
   }
 }
