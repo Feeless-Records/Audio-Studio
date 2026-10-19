@@ -2,9 +2,11 @@ import {AnimationSystem} from "./systems/animation.js";
 import {LayoutSystem} from "./systems/layout.js";
 import {ThemeSystem} from "./systems/theme.js";
 import {TextSystem} from "./systems/text-system.js";
+import {AudioSystem} from "./systems/audio.js";
 class AudioStudioApp {
   constructor(){
     this.theme=new ThemeSystem();
+    this.audio=new AudioSystem();
     this.layout=new LayoutSystem(document.querySelector("#app"));
     this.animation=new AnimationSystem(document.querySelector(".fly-track"));
     this.text=new TextSystem(document.querySelector("#flying"));
@@ -14,7 +16,8 @@ class AudioStudioApp {
   }
   async start(){
     this.theme.apply("dark");
-    this.layout.renderWelcome("Hello World!","Welcome to Feeless Records Audio Studio.");
+    const button=this.layout.renderWelcome("Hello World!","Welcome to Feeless Records Audio Studio.");
+    button.addEventListener("click",()=>this.playTone(button));
     this.label.textContent=this.message;
     this.animation.start();
     try{
@@ -27,6 +30,19 @@ class AudioStudioApp {
       console.error(error);
     }
     window.addEventListener("pagehide",()=>this.stop(),{once:true});
+  }
+  async playTone(button){
+    if(this.audio.playing)return;
+    button.classList.add("is-playing");
+    button.setAttribute("aria-pressed","true");
+    button.disabled=true;
+    try{await this.audio.playSine(600,1);}
+    catch(error){console.error(error);this.status.textContent="Audio error: "+error.message;}
+    finally{
+      button.classList.remove("is-playing");
+      button.setAttribute("aria-pressed","false");
+      button.disabled=false;
+    }
   }
   stop(){this.animation.stop();}
 }
