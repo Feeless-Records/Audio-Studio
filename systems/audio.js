@@ -1,5 +1,5 @@
 export class AudioSystem {
-  constructor(url="./Perkele!.wav"){this.url=url;this.playing=false;this.audio=new Audio();this.audio.preload="auto";this.audio.src=url;this.context=null;this.analyser=null;this.source=null;}
+  constructor(url="./Perkele!.wav"){this.url=url;this.playing=false;this.audio=new Audio();this.audio.preload="auto";this.audio.src=url;this.context=null;this.analyser=null;this.source=null;this.outputGain=Math.pow(10,-6/20);this.volumeNode=null;}
   async play(){
     if(this.playing)return;
     this.playing=true;
@@ -25,7 +25,10 @@ export class AudioSystem {
     this.analyser=this.context.createAnalyser();
     this.analyser.fftSize=4096;this.analyser.minDecibels=-60;
     this.analyser.maxDecibels=0;this.analyser.smoothingTimeConstant=.65;
-    this.source.connect(this.analyser);
+    this.volumeNode=this.context.createGain();
+    this.volumeNode.gain.value=this.outputGain;
+    this.source.connect(this.volumeNode);
+    this.volumeNode.connect(this.analyser);
     this.analyser.connect(this.context.destination);
   }
   stop(){this.audio.pause();this.audio.currentTime=0;this.playing=false;}
