@@ -1,5 +1,11 @@
-// WebGPU triangle rendering, with SVG vector fallback.
-async function renderGpu(canvas,data) {
+export class TextRenderer {
+  constructor(canvas){this.canvas=canvas;this.backend=null;}
+  async render(data,text){
+    try{await this.renderGpu(this.canvas,data);this.backend="WebGPU";}
+    catch(error){console.warn("WebGPU fallback",error);this.svgFallback(this.canvas,data,text);this.backend="SVG";}
+    return this.backend;
+  }
+  async renderGpu(canvas,data) {
   if (!navigator.gpu) throw new Error("WebGPU unsupported");
   const adapter=await navigator.gpu.requestAdapter();
   if (!adapter) throw new Error("WebGPU adapter unavailable");
@@ -42,11 +48,7 @@ struct Uniforms { dimensions: vec2f, textWidth: f32, padding: f32 }
   // Rebuild on resize to preserve crisp vector edges.
   return device;
 }
-export async function renderVectorText(canvas,data,text){
-  try { await renderGpu(canvas,data); return "WebGPU"; }
-  catch(error){ console.warn("WebGPU fallback:",error); svgFallback(canvas,data,text); return "SVG"; }
-}
-function svgFallback(canvas,data,text){
+  svgFallback(canvas,data,text){
  canvas.style.display="none";
  const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
  svg.setAttribute("viewBox",`0 0 ${data.width} 7`);
@@ -56,4 +58,6 @@ function svgFallback(canvas,data,text){
  let commands="";
  for(let i=0;i<data.vertices.length;i+=12){const x=data.vertices[i],y=data.vertices[i+1];commands+=`M${x} ${y}h0.88v0.88h-0.88z`;}
  path.setAttribute("d",commands);path.setAttribute("fill","#ffb542");svg.append(path);canvas.after(svg);
+}
+
 }
