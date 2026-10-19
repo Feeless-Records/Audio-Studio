@@ -3,11 +3,11 @@ const http = require("node:http");
 const fs = require("node:fs");
 const path = require("node:path");
 const root = __dirname;
-const types = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".wasm": "application/wasm" };
+const types = { ".html": "text/html; charset=utf-8", ".js": "text/javascript; charset=utf-8", ".wasm": "application/wasm", ".wav": "audio/wav" };
 const server = http.createServer((req, res) => {
   const pathname = new URL(req.url, "http://localhost").pathname;
   const file = pathname === "/" ? "index.html" : pathname.slice(1);
-  if (!["index.html", "app.js", "text-layout.wasm", "systems/audio.js", "systems/animation.js", "systems/layout.js", "systems/theme.js", "systems/text-processor.js", "systems/text-renderer.js", "systems/text-system.js"].includes(file)) {
+  if (!["index.html", "app.js", "text-layout.wasm", "Perkele!.wav", "systems/audio.js", "systems/animation.js", "systems/layout.js", "systems/theme.js", "systems/text-processor.js", "systems/text-renderer.js", "systems/text-system.js"].includes(file)) {
     res.writeHead(404); res.end("Not found"); return;
   }
   fs.readFile(path.join(root, file), (err, contents) => {
