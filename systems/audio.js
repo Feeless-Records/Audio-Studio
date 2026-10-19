@@ -1,27 +1,19 @@
 export class AudioSystem {
-  constructor(){this.context=null;this.playing=false;}
-  async playSine(frequency=600,duration=1){
+  constructor(url="./Perkele!.wav"){this.url=url;this.playing=false;this.audio=new Audio();this.audio.preload="auto";this.audio.src=url;}
+  async play(){
     if(this.playing)return;
-    const Context=window.AudioContext||window.webkitAudioContext;
-    if(!Context)throw new Error("Web Audio API is unavailable");
-    if(!this.context)this.context=new Context();
-    await this.context.resume();
-    const now=this.context.currentTime;
-    const oscillator=this.context.createOscillator();
-    const envelope=this.context.createGain();
-    oscillator.type="sine";
-    oscillator.frequency.setValueAtTime(frequency,now);
-    envelope.gain.setValueAtTime(0,now);
-    envelope.gain.linearRampToValueAtTime(0.18,now+0.01);
-    envelope.gain.setValueAtTime(0.18,now+duration-0.02);
-    envelope.gain.linearRampToValueAtTime(0,now+duration);
-    oscillator.connect(envelope);
-    envelope.connect(this.context.destination);
     this.playing=true;
-    return new Promise((resolve)=>{
-      oscillator.onended=()=>{oscillator.disconnect();envelope.disconnect();this.playing=false;resolve();};
-      oscillator.start(now);
-      oscillator.stop(now+duration);
-    });
+    try{
+      this.audio.currentTime=0;
+      await new Promise((resolve,reject)=>{
+        const cleanup=()=>{this.audio.removeEventListener("ended",end);this.audio.removeEventListener("error",fail);};
+        const end=()=>{cleanup();resolve();};
+        const fail=()=>{cleanup();reject(new Error("Audio file unavailable or unsupported"));};
+        this.audio.addEventListener("ended",end,{once:true});
+        this.audio.addEventListener("error",fail,{once:true});
+        this.audio.play().catch(fail);
+      });
+    }finally{this.playing=false;}
   }
+  stop(){this.audio.pause();this.audio.currentTime=0;this.playing=false;}
 }
